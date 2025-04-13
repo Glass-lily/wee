@@ -1,5 +1,6 @@
 <script>
 import {HomeFilled, Menu, Message,Setting} from "@element-plus/icons-vue";
+import store from "@/store";
 
 export default {
   name: "AsidePart",
@@ -7,7 +8,7 @@ export default {
   data() {
     return {
       //isCollapse:false
-      menu: [
+     /* menu: [
         {
           menuClick: 'Admin',
           menuName: '管li员管理',
@@ -17,8 +18,15 @@ export default {
           menuName: '用户管理',
           menuIcon: Setting
         }
-      ]
+      ]*/
     }
+  },
+  computed:{
+      "menu":{
+        get(){
+          return store.state.menu
+        }
+      }
   },
   props: {
     isCollapse: Boolean
@@ -39,15 +47,15 @@ export default {
         </template>
       </el-menu-item>
       <el-menu-item
-          :index="`/${item.menuClick}`"
+          :index="`/${item.menuclick}`"
           v-for="item in menu"
           :key="item.id"
       >
         <template #title>
           <el-icon>
-            <component :is="item.menuIcon" />
+            <component :is="item.menuicon" />
           </el-icon>
-          <span> {{ item.menuName }}</span>
+          <span> {{ item.menuname }}</span>
         </template>
       </el-menu-item>
 <!--      <el-menu-item index="/User">-->

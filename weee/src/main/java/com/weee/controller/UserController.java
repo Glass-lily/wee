@@ -106,15 +106,9 @@ public class UserController {
 
     @PostMapping("/listPage")
     public List<User> listPage(@RequestBody QueryPageParam queryPageParam) {
-//        System.out.println(queryPageParam);
-//
-//        System.out.println("num= "+queryPageParam.getPageNum());
-//        System.out.println("size= "+queryPageParam.getPageSize());
 
         HashMap param = queryPageParam.getParam();
         String name = param.get("name").toString();
-//        System.out.println("param.name= "+param.get("name"));
-//        System.out.println("param.no= "+param.get("no"));
 
         //分页
         Page<User> page=new Page(queryPageParam.getPageNum(),queryPageParam.getPageSize());
@@ -135,7 +129,6 @@ public class UserController {
     public Result listPageC(@RequestBody QueryPageParam queryPageParam) {
 
         HashMap param = queryPageParam.getParam();
-//        String name = param.get("name").toString();
         Object nameObj = param.get("name");
         String name = (nameObj != null) ? nameObj.toString() : null;
 
