@@ -10,7 +10,36 @@ const routes=[
     {
         path:'/Index',
         name:'index',
-        component:()=>import('../components/IndexPage.vue')
+        component:()=>import('../components/IndexPage.vue'),
+        children:[
+            {
+                path:'/Home',
+                name:'home',
+                meta:{
+                    title:'首页'
+
+                },
+                component:()=>import('../components/HomePage.vue')
+            },
+            {
+                path:'/Admin',
+                name:'admin',
+                meta:{
+                    title:'管理员管理'
+
+                },
+                component:()=>import('../components/Admin/AdminManage.vue')
+            },
+            {
+                path:'/User',
+                name:'user',
+                meta:{
+                    title:'用户管理'
+
+                },
+                component:()=>import('../components/User/UserManage.vue')
+            },
+        ]
 
     }
 ]
@@ -18,5 +47,19 @@ const router = createRouter({
     history: createWebHistory(),
     routes
 });
+// 保存原始的 push 方法
+const originalPush = router.push;
+
+// 重写 push 方法
+router.push = function push(location) {
+    return originalPush.call(this, location).catch((err) => {
+        // 如果是重复路由跳转的错误，则忽略该错误
+        if (err.name === 'NavigationDuplicated') {
+            return err;
+        }
+        // 其他错误则继续抛出
+        throw err;
+    });
+};
 
 export default router

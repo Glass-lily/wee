@@ -2,12 +2,12 @@
 
 import AsidePart from "@/components/AsidePart.vue";
 import HeaderPart from "@/components/HeaderPart.vue";
-import MainPart from "@/components/MainPart.vue";
+// import MainPart from "@/components/MainPart.vue";
 
 export default {
   name:"IndexPage",
   components: {
-    MainPart,
+    // MainPart,
     HeaderPart,
     AsidePart
   },
@@ -40,7 +40,7 @@ export default {
 
 </script>
   <template>
-    <el-container class="layout-container-demo" style="height: 100%">
+    <el-container class="layout-container-demo" style="height: 100vh">
       <el-aside :width="aside_width" >
         <el-scrollbar>
 
@@ -57,7 +57,7 @@ export default {
         </el-header>
         <el-main>
           <el-scrollbar>
-              <MainPart></MainPart>
+            <router-view/>
           </el-scrollbar>
         </el-main>
       </el-container>
