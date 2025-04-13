@@ -1,5 +1,6 @@
 import {createStore} from 'vuex';
 import router from "@/router";
+import createPersistedStete from 'vuex-persistedstate'
 
 // 封装 commit 的辅助函数
 export function commit(type, payload) {
@@ -45,7 +46,8 @@ const store = createStore({
         getMenu(state) {
             return state.menu;
         }
-    }
+    },
+    plugins:[createPersistedStete()]
 });
 
 export default store;

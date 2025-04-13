@@ -28,7 +28,7 @@ const routes=[
                     title:'管理员管理'
 
                 },
-                component:()=>import('../components/Admin/AdminManage.vue')
+                component:()=>import('@/components/admin/AdminManage.vue')
             },
             {
                 path:'/User',
@@ -37,8 +37,18 @@ const routes=[
                     title:'用户管理'
 
                 },
-                component:()=>import('../components/User/UserManage.vue')
+                component:()=>import('@/components/user/UserManage.vue')
             },
+            {
+                path:'/Storage',
+                name:'storage',
+                meta:{
+                    title:'知识管理'
+
+                },
+                component:()=>import('@/components/storage/StorageManage.vue')
+            },
+
         ]
 
     }

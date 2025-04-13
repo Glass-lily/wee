@@ -2,7 +2,6 @@ package com.weee.controller;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-//import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
@@ -36,38 +35,42 @@ public class UserController {
 
     @GetMapping("/findByNo")
     public Result findByNo(@RequestParam String no) {
-        List list= userService.lambdaQuery().eq(User::getNo, no).list();
-        return !list.isEmpty() ? Result.success(list):Result.fail();
+        List list = userService.lambdaQuery().eq(User::getNo, no).list();
+        return !list.isEmpty() ? Result.success(list) : Result.fail();
     }
+
     //删除
     @GetMapping("/del")
     public Result del(@RequestParam String id) {
-        return userService.removeById(id)?Result.success():Result.fail();
+        return userService.removeById(id) ? Result.success() : Result.fail();
     }
+
     //新增
     @PostMapping("/save")
     public Result save(@RequestBody User user) {
-        return userService.save(user)?Result.success():Result.fail();
+        return userService.save(user) ? Result.success() : Result.fail();
     }
+
     //更新
     @PostMapping("/update")
     public Result update(@RequestBody User user) {
-        return userService.updateById(user)?Result.success():Result.fail();
+        return userService.updateById(user) ? Result.success() : Result.fail();
     }
+
     //登录
     @PostMapping("/login")
     public Result login(@RequestBody User user) {
-        List list= userService.lambdaQuery()
+        List list = userService.lambdaQuery()
                 .eq(User::getNo, user.getNo())
-                .eq(User::getPassword,user.getPassword())
+                .eq(User::getPassword, user.getPassword())
                 .list();
 
-        if (!list.isEmpty()){
-            User user1=(User)list.getFirst();
-            List menulist= menuService.lambdaQuery().like(Menu::getMenuright, user1.getRoleId()).list();
+        if (!list.isEmpty()) {
+            User user1 = (User) list.getFirst();
+            List menulist = menuService.lambdaQuery().like(Menu::getMenuright, user1.getRoleId()).list();
             HashMap res = new HashMap();
-            res.put("user",user1);
-            res.put("menu",menulist);
+            res.put("user", user1);
+            res.put("menu", menulist);
             return Result.success(res);
         }
         return Result.fail();
@@ -111,14 +114,14 @@ public class UserController {
         String name = param.get("name").toString();
 
         //分页
-        Page<User> page=new Page(queryPageParam.getPageNum(),queryPageParam.getPageSize());
+        Page<User> page = new Page(queryPageParam.getPageNum(), queryPageParam.getPageSize());
 
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper();
         lambdaQueryWrapper.like(User::getName, name);
 
         IPage result = userService.page(page, lambdaQueryWrapper);
 
-        System.out.println("total=  "+result.getTotal());
+        System.out.println("total=  " + result.getTotal());
 
         return result.getRecords();
     }
@@ -145,55 +148,54 @@ public class UserController {
         }
 
         //分页
-        Page<User> page=new Page<>(queryPageParam.getPageNum(),queryPageParam.getPageSize());
+        Page<User> page = new Page<>(queryPageParam.getPageNum(), queryPageParam.getPageSize());
 
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        if (StringUtils.isNotBlank(name) &&!"null".equals(name)) {
+        if (StringUtils.isNotBlank(name) && !"null".equals(name)) {
             lambdaQueryWrapper.like(User::getName, name);
         }
-        if(StringUtils.isNotBlank(sex)){
-            lambdaQueryWrapper.eq(User::getSex,sex);
+        if (StringUtils.isNotBlank(sex)) {
+            lambdaQueryWrapper.eq(User::getSex, sex);
         }
 
 
-       IPage result = userService.pageCC(page,lambdaQueryWrapper);
+        IPage result = userService.pageCC(page, lambdaQueryWrapper);
 
 //        System.out.println("total=  "+result.getTotal());
 
-        return Result.success(result.getRecords(),result.getTotal());
+        return Result.success(result.getRecords(), result.getTotal());
     }
 
 
     @PostMapping("/listPageC1")
-    public Result listPageC1(@RequestBody QueryPageParam query){
+    public Result listPageC1(@RequestBody QueryPageParam query) {
         HashMap param = query.getParam();
-        String name = (String)param.get("name");
-        String sex = (String)param.get("sex");
-        String roleId = (String)param.get("roleId");
+        String name = (String) param.get("name");
+        String sex = (String) param.get("sex");
+        String roleId = (String) param.get("roleId");
 
         Page<User> page = new Page<>();
         page.setCurrent(query.getPageNum());
         page.setSize(query.getPageSize());
 
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        if(StringUtils.isNotBlank(name) && !"null".equals(name)){
-            lambdaQueryWrapper.like(User::getName,name);
+        if (StringUtils.isNotBlank(name) && !"null".equals(name)) {
+            lambdaQueryWrapper.like(User::getName, name);
         }
-        if(StringUtils.isNotBlank(sex)){
-            lambdaQueryWrapper.eq(User::getSex,sex);
+        if (StringUtils.isNotBlank(sex)) {
+            lambdaQueryWrapper.eq(User::getSex, sex);
         }
-        if(StringUtils.isNotBlank(roleId)){
-            lambdaQueryWrapper.eq(User::getRoleId,roleId);
+        if (StringUtils.isNotBlank(roleId)) {
+            lambdaQueryWrapper.eq(User::getRoleId, roleId);
         }
 
         //IPage result = userService.pageC(page);
-        IPage result = userService.pageCC(page,lambdaQueryWrapper);
+        IPage result = userService.pageCC(page, lambdaQueryWrapper);
 
-        System.out.println("total=="+result.getTotal());
+        System.out.println("total==" + result.getTotal());
 
-        return Result.success(result.getRecords(),result.getTotal());
+        return Result.success(result.getRecords(), result.getTotal());
     }
-
 
 
 }
