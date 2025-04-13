@@ -29,10 +29,12 @@ export default {
         if (valid) { //valid成功为true，失败为false
           //去后台验证用户名密码
           this.$http.post(this.$httpUrl+'/user/login',this.loginForm).then(res=>res.data).then(res=>{
-
+            console.log(res)
             if(res.code==200){
               //存储
-              sessionStorage.setItem("CurUser",JSON.stringify(res.data))
+              sessionStorage.setItem("CurUser",JSON.stringify(res.data.user))
+              console.log(res.data)
+              console.log(res.data.menu)
               //跳转
               this.$router.replace('/Index');
 

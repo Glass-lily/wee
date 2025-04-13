@@ -5,9 +5,11 @@ import {Expand, Fold, Setting} from "@element-plus/icons-vue";
 export default {
   name:"HeaderPart",
   data(){
-    return{
-      user: JSON.parse(sessionStorage.getItem('CurUser'))
-    }
+
+      return{
+        user: JSON.parse(sessionStorage.getItem('CurUser'))
+      }
+
   },
   components: {
     Expand,

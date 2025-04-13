@@ -8,7 +8,9 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.weee.common.QueryPageParam;
 import com.weee.common.Result;
+import com.weee.entity.Menu;
 import com.weee.entity.User;
+import com.weee.service.MenuService;
 import com.weee.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -21,8 +23,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/user")
 public class UserController {
+
     @Autowired
     private UserService userService;
+    @Autowired
+    private MenuService menuService;
+
     @GetMapping("/list")
     public List<User> list() {
         return userService.list();
@@ -55,7 +61,16 @@ public class UserController {
                 .eq(User::getNo, user.getNo())
                 .eq(User::getPassword,user.getPassword())
                 .list();
-        return !list.isEmpty() ? Result.success(list.getFirst()):Result.fail();
+
+        if (!list.isEmpty()){
+            User user1=(User)list.getFirst();
+            List menulist= menuService.lambdaQuery().like(Menu::getMenuright, user1.getRoleId()).list();
+            HashMap res = new HashMap();
+            res.put("user",user1);
+            res.put("menu",menulist);
+            return Result.success(res);
+        }
+        return Result.fail();
     }
 
 
