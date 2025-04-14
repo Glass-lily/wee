@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.weee.common.QueryPageParam;
 import com.weee.common.Result;
+import com.weee.entity.Menu;
 import com.weee.entity.Storage;
 import com.weee.entity.Storage;
 import com.weee.service.StorageService;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * (Storage)表控制层
@@ -40,6 +43,8 @@ public class StorageController {
     //新增
     @PostMapping("/save")
     public Result save(@RequestBody Storage storage) {
+        int num  = Optional.ofNullable(storageService.list().size()).orElse(1);
+        storage.setId(num+2);
         return storageService.save(storage) ? Result.success() : Result.fail();
     }
 
@@ -69,6 +74,12 @@ public class StorageController {
 
 
         return Result.success(result.getRecords(), result.getTotal());
+    }
+
+    @GetMapping("/list")
+    public Result list() {
+        List list= storageService.list();
+        return Result.success(list);
     }
 
 }

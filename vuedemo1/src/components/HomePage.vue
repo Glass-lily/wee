@@ -52,6 +52,10 @@
         </el-tag>
       </el-descriptions-item>
     </el-descriptions>
+
+    <div>
+      <el-button>修改个人信息</el-button>
+    </div>
     <div class="date-utils-wrapper">
       <DateUtils />
     </div>

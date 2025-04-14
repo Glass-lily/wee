@@ -435,25 +435,6 @@ export default {
   overflow: hidden;
 }
 
-.el-table {
-  border-radius: 8px;
-}
-
-.el-table .cell {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-}
-
-.el-tag {
-  transition: transform 0.3s;
-}
-
-.el-tag:hover {
-  transform: scale(1.05);
-}
-
 .pagination-wrapper {
   margin-top: 20px;
   display: flex;
@@ -489,24 +470,10 @@ export default {
     margin-top: 10px;
   }
 
-  .el-table {
-    height: auto !important;
-  }
-
   .pagination-wrapper {
     justify-content: center;
   }
 
-  .el-pagination {
-    --el-pagination-button-width: 28px;
-  }
 }
 
-:deep(.el-table__row--striped) {
-  background-color: #fafafa;
-}
-
-:deep(.el-table__row:hover) {
-  background-color: #e6f7ff;
-}
 </style>

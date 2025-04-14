@@ -3,22 +3,22 @@ package com.weee.entity;
 import java.io.Serializable;
 
 /**
- * (Storage)实体类
+ * (Goodstype)实体类
  *
  * @author hk
- * @since 2025-04-13 23:02:21
+ * @since 2025-04-14 11:57:21
  */
-public class Storage implements Serializable {
+public class Goodstype implements Serializable {
 
-    /**
+/**
      * 主键
      */
     private Integer id;
-    /**
-     * 仓库名
+/**
+     * 分类名
      */
     private String name;
-    /**
+/**
      * 备注
      */
     private String remark;

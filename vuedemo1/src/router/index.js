@@ -43,11 +43,50 @@ const routes=[
                 path:'/Storage',
                 name:'storage',
                 meta:{
-                    title:'知识管理'
+                    title:'知识仓库管理'
 
                 },
                 component:()=>import('@/components/storage/StorageManage.vue')
             },
+            {
+                path:'/Goodstype',
+                name:'goodstype',
+                meta:{
+                    title:'知识分类管理'
+
+                },
+                component:()=>import('@/components/goodstype/GoodstypeManage.vue')
+            },
+            {
+                path:'/Goods',
+                name:'goods',
+                meta:{
+                    title:'知识'
+
+                },
+                component:()=>import('@/components/goods/GoodsManage.vue')
+            },
+            {
+                path:'/Record',
+                name:'record',
+                meta:{
+                    title:'知识分类管理'
+
+                },
+                component:()=>import('@/components/goodstype/GoodstypeManage.vue')
+            },
+            {
+                path:'/Richtext',
+                name:'richtext',
+                meta:{
+                    title:'富文本编辑'
+
+                },
+                component:()=>import('@/components/richtext/RichtextManage.vue')
+            },
+
+
+
 
         ]
 
