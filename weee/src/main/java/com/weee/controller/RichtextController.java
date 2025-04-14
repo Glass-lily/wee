@@ -49,18 +49,16 @@ public class RichtextController {
         String title = (String) param.get("title");
 
 
-        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Richtext> page = new Page<>();
+        Page<Richtext> page = new Page<>();
         page.setCurrent(query.getPageNum());
         page.setSize(query.getPageSize());
 
         LambdaQueryWrapper<Richtext> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        if (StringUtils.isNotBlank(title    ) && !"null".equals(title)) {
+        if (StringUtils.isNotBlank(title) && !"null".equals(title)) {
             lambdaQueryWrapper.like(Richtext::getTitle, title);
         }
 
-
         IPage result = richtextService.pageS(page, lambdaQueryWrapper);
-
 
         return Result.success(result.getRecords(), result.getTotal());
     }

@@ -23,7 +23,7 @@ public class RichtextServiceImpl extends ServiceImpl<RichtextMapper, Richtext> i
 
     @Override
     public IPage<Richtext> pageS(Page<Richtext> page, Wrapper<Richtext> wrapper) {
-        return baseMapper.pageS(page, wrapper); // 直接使用 BaseMapper 的 selectPage
+        return baseMapper.selectPage(page, wrapper); // 直接使用 BaseMapper 的 selectPage
     }
 
 

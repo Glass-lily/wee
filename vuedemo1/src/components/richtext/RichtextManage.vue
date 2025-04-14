@@ -226,7 +226,7 @@ export default {
           class="dialog-form"
       >
         <el-form-item label="名字" prop="title">
-          <el-input v-model="form.title" placeholder="请输入名字" />
+          <el-input v-model="form.title" placeholder="请输入标题" />
         </el-form-item>
         <el-form-item label="备注" prop="content">
           <el-input

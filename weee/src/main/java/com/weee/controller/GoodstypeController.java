@@ -54,7 +54,7 @@ public class GoodstypeController {
         String name = (String) param.get("name");
 
 
-        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Goodstype> page = new Page<>();
+        Page<Goodstype> page = new Page<>();
         page.setCurrent(query.getPageNum());
         page.setSize(query.getPageSize());
 

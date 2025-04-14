@@ -60,7 +60,7 @@ public class StorageController {
         String name = (String) param.get("name");
 
 
-        com.baomidou.mybatisplus.extension.plugins.pagination.Page<Storage> page = new Page<>();
+        Page<Storage> page = new Page<>();
         page.setCurrent(query.getPageNum());
         page.setSize(query.getPageSize());
 
