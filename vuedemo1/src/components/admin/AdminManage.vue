@@ -49,7 +49,7 @@ export default {
         sex: 'M',
         age: '',
         password: '',
-        roleId: '1', // Default to admin
+        roleId: '2', // 默认普通用户
         phone: '',
       },
       rules: {
@@ -284,11 +284,11 @@ export default {
         <el-table-column prop="roleId" label="身份" width="140" align="center">
           <template #default="scope">
             <el-tag
-                :type="scope.row.roleId === '0' ? 'danger' : scope.row.roleId === '1' ? 'success' : 'primary'"
+                :type="scope.row.roleId === '0' ? 'danger' : scope.row.roleId === 1 ? 'success' : 'primary'"
                 size="small"
                 effect="light"
             >
-              {{ scope.row.roleId === '0' ? '超级管理员' : scope.row.roleId === '1' ? '管理员' : '普通用户' }}
+              {{ scope.row.roleId === '0' ? '超级管理员' : scope.row.roleId === 1 ? '管理员' : '普通用户' }}
             </el-tag>
           </template>
         </el-table-column>
