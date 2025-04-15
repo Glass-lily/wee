@@ -76,13 +76,13 @@ const routes=[
                 component:()=>import('@/components/goodstype/GoodstypeManage.vue')
             },
             {
-                path:'/Richtext',
-                name:'richtext',
+                path:'/PersonCenter',
+                name:'personCenter',
                 meta:{
-                    title:'富文本编辑'
+                    title:'个人中心'
 
                 },
-                component:()=>import('@/components/richtext/RichtextManage.vue')
+                component:()=>import('@/components/personcenter/PersonCenterPage.vue')
             },
 
 

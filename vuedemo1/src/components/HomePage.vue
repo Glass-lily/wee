@@ -1,169 +1,111 @@
-<template>
-  <div class="home-container">
-    <h1 class="welcome-title">欢迎你，{{ user.name || '用户' }}！</h1>
-    <el-descriptions
-        title="个人中心"
-        :column="column"
-        border
-        class="user-info"
-    >
-      <el-descriptions-item>
-        <template #label>
-          <el-icon><User /></el-icon>
-          账号
-        </template>
-        {{ user.no || '-' }}
-      </el-descriptions-item>
-      <el-descriptions-item>
-        <template #label>
-          <el-icon><Iphone /></el-icon>
-          电话
-        </template>
-        {{ user.phone || '-' }}
-      </el-descriptions-item>
-      <el-descriptions-item>
-        <template #label>
-          <el-icon><Location /></el-icon>
-          性别
-        </template>
-        <el-tag
-            :type="user.sex === '1' ? 'primary' : 'danger'"
-            size="small"
-            effect="light"
-        >
-          <el-icon>
-            <Male v-if="user.sex === '1'" />
-            <Female v-else />
-          </el-icon>
-          {{ user.sex === '1' ? '男' : '女' }}
-        </el-tag>
-      </el-descriptions-item>
-      <el-descriptions-item>
-        <template #label>
-          <el-icon><Tickets /></el-icon>
-          角色
-        </template>
-        <el-tag
-            type="success"
-            size="small"
-            effect="light"
-        >
-          {{ user.roleId == 0 ? '超级管理员' : user.roleId == 1 ? '管理员' : '用户' }}
-        </el-tag>
-      </el-descriptions-item>
-    </el-descriptions>
-    <div class="action-buttons">
-      <el-button type="primary" round>修改个人信息</el-button>
-    </div>
-    <div class="date-utils-wrapper">
-      <DateUtils />
-    </div>
-  </div>
-</template>
-
 <script>
-import DateUtils from "./DateUtils";
-import { User, Iphone, Location, Tickets, Male, Female } from "@element-plus/icons-vue";
-
 export default {
   name: "HomePage",
-  components: { DateUtils, User, Iphone, Location, Tickets, Male, Female },
   data() {
     return {
-      user: {},
+      user: JSON.parse(sessionStorage.getItem('CurUser')) || { name: '用户' }, // Get user from session storage
+      welcomeMessage: '欢迎来到知识库管理系统！', // Default welcome message
+      recentActivity: ['修改资料', '查看文档', '参与讨论'], // Sample recent activities
+      tableData: [ // Sample table data
+        { name: '文档A', description: '描述A', date: '2025-04-15' },
+        { name: '文档B', description: '描述B', date: '2025-04-14' },
+        { name: '文档C', description: '描述C', date: '2025-04-13' },
+      ],
     };
   },
-  computed: {
-    column() {
-      return this.$isMobile ? 1 : 2;
-    },
-  },
-  methods: {
-    init() {
-      const curUser = sessionStorage.getItem('CurUser');
-      this.user = curUser ? JSON.parse(curUser) : {};
-    },
-  },
   created() {
-    this.init();
+    if (this.user.name === '用户') {
+      this.welcomeMessage = '请先登录';
+    } else {
+      this.welcomeMessage = `欢迎回来, ${this.user.name}`;
+    }
   },
 };
 </script>
 
+<template>
+  <div class="home-container">
+    <div class="welcome-message">
+      <h1>{{ welcomeMessage }}</h1>
+    </div>
+
+    <div class="recent-activity">
+      <h3>最近活动：</h3>
+      <ul>
+        <li v-for="(activity, index) in recentActivity" :key="index">{{ activity }}</li>
+      </ul>
+    </div>
+
+    <!-- Full-width Table -->
+    <div class="table-container">
+      <h3>文档列表</h3>
+      <table class="full-width-table">
+        <thead>
+        <tr>
+          <th>名称</th>
+          <th>描述</th>
+          <th>日期</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="(item, index) in tableData" :key="index">
+          <td>{{ item.name }}</td>
+          <td>{{ item.description }}</td>
+          <td>{{ item.date }}</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</template>
+
 <style scoped>
 .home-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #eceff5, #f7f9fc);
   padding: 20px;
+  font-family: Arial, sans-serif;
+  height: 100vh; /* Full height of the viewport */
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 20px;
 }
 
-.welcome-title {
-  font-size: 28px;
-  font-weight: 600;
-  color: #303133;
-  text-align: center;
-  animation: fadeIn 0.8s ease-in-out;
+.welcome-message {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
 }
 
-.user-info {
-  width: 100%;
-  max-width: 800px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  padding: 20px;
-  animation: slideIn 0.8s ease-in-out;
+.recent-activity {
+  font-size: 16px;
 }
 
-.action-buttons {
-  display: flex;
-  gap: 10px;
+.recent-activity ul {
+  list-style-type: none;
+  padding: 0;
 }
 
-.el-button {
-  transition: transform 0.2s;
+.recent-activity li {
+  padding: 5px 0;
 }
 
-.el-button:hover {
-  transform: scale(1.05);
+.table-container {
+  flex: 1; /* Ensures the table container fills the available space */
+  overflow: auto;
 }
 
-.date-utils-wrapper {
-  width: 100%;
-  max-width: 800px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  padding: 20px;
-  animation: slideIn 0.8s ease-in-out 0.2s;
+.full-width-table {
+  width: 100%; /* Ensures the table fills the container width */
+  border-collapse: collapse; /* Makes table borders collapse */
+  table-layout: fixed; /* Ensures consistent column width */
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-20px); }
-  to { opacity: 1; transform: translateY(0); }
+.full-width-table th, .full-width-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
 }
 
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@media (max-width: 768px) {
-  .home-container {
-    padding: 10px;
-  }
-
-  .welcome-title {
-    font-size: 22px;
-  }
-
-  .user-info,
-  .date-utils-wrapper {
-    padding: 15px;
-  }
+.full-width-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
 }
 </style>

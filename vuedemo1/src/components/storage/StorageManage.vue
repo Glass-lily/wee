@@ -249,6 +249,7 @@ export default {
 </template>
 
 <style scoped>
+
 .storage-container {
   padding: 20px;
   background-color: #f5f7fa;

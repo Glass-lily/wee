@@ -82,12 +82,13 @@ export default {
           <fold v-if="icon === 'Fold'" />
           <expand v-else />
         </el-icon>
-        <img :src="imgUrl" alt="Logo" class="logo" />
+
         <span class="header-title">知识库管理系统</span>
       </div>
       <div class="header-right">
-        <span class="user-name">{{ user.name }}</span>
         <span class="current-time">{{ currentTime }}</span>
+        <img :src="imgUrl" alt="Logo" class="logo" />
+        <span class="user-name">{{ user.name }}</span>
         <el-dropdown trigger="click">
           <el-icon size="20" color="#303133" class="setting-icon">
             <setting />
