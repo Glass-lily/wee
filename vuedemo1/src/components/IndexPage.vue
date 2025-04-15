@@ -1,96 +1,92 @@
-<script >
-
+<script>
 import AsidePart from "@/components/AsidePart.vue";
 import HeaderPart from "@/components/HeaderPart.vue";
-// import MainPart from "@/components/MainPart.vue";
 
 export default {
-  name:"IndexPage",
+  name: "IndexPage",
   components: {
-    // MainPart,
     HeaderPart,
-    AsidePart
+    AsidePart,
   },
-  methods:{
-    doCollapse(){
-
-      this.isCollapse=!this.isCollapse
-      if(!this.isCollapse){//展开
-          this.aside_width='200px';
-        this.icon='Fold'
-
-      }else {//收起
-        this.aside_width='64px';
-        this.icon='Expand'
-      }
-    }
+  methods: {
+    doCollapse() {
+      this.isCollapse = !this.isCollapse;
+      this.aside_width = this.isCollapse ? '64px' : '200px';
+      this.icon = this.isCollapse ? 'Expand' : 'Fold';
+    },
   },
-  data(){
+  data() {
     return {
-      isCollapse:false,
-      aside_width:'200px',
-      icon:'Fold'
+      isCollapse: false,
+      aside_width: '200px',
+      icon: 'Fold',
+    };
+  },
+};
+</script>
 
-    }
-  }
+<template>
+  <el-container class="layout-container">
+    <el-aside :width="aside_width">
+      <el-scrollbar>
+        <AsidePart :isCollapse="isCollapse" />
+      </el-scrollbar>
+    </el-aside>
+    <el-container>
+      <el-header>
+        <HeaderPart @doCollapse="doCollapse" :icon="icon" />
+      </el-header>
+      <el-main>
+        <el-scrollbar>
+          <div class="main-content">
+            <router-view />
+          </div>
+        </el-scrollbar>
+      </el-main>
+    </el-container>
+  </el-container>
+</template>
 
-
+<style scoped>
+.layout-container {
+  height: 100vh;
+  background: linear-gradient(135deg, #eceff5, #f7f9fc);
 }
 
+.el-aside {
+  background: #304156;
+  transition: width 0.3s ease;
+}
 
-</script>
-  <template>
-    <el-container class="layout-container-demo" style="height: 100vh">
-      <el-aside :width="aside_width" >
-        <el-scrollbar>
+.el-header {
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  padding: 0;
+  display: flex;
+  align-items: center;
+  height: 60px;
+}
 
-          <AsidePart :isCollapse="isCollapse"></AsidePart>
+.el-main {
+  padding: 20px;
+}
 
-        </el-scrollbar>
-      </el-aside>
+.main-content {
+  max-width: 1000px;
+  margin: 0 auto;
+}
 
-      <el-container>
-        <el-header style=" font-size: 12px;">
-          <div class="toolbar">
-            <HeaderPart @doCollapse="doCollapse" :icon="icon"></HeaderPart>
-          </div>
-        </el-header>
-        <el-main>
-          <el-scrollbar>
-            <router-view/>
-          </el-scrollbar>
-        </el-main>
-      </el-container>
-    </el-container>
-  </template>
+@media (max-width: 768px) {
+  .el-aside {
+    width: 64px !important;
+  }
 
+  .el-header {
+    height: 50px;
+  }
 
-
-  <style scoped>
-    .layout-container-demo .el-header {
-      position: relative;
-      background-color:#c4e0fd ;
-      color: #000000;
-
-    }
-    .layout-container-demo .el-aside {
-      color: #cd16ff;
-      background: #465357;
-
-    }
-
-    .layout-container-demo .el-menu {
-      border-right: none;
-    }
-    .layout-container-demo .el-main {
-      padding: 0;
-    }
-    .layout-container-demo .toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      right: 20px;
-    }
-  </style>
-
+  .el-main {
+    padding: 10px;
+  }
+}
+</style>

@@ -52,9 +52,8 @@
         </el-tag>
       </el-descriptions-item>
     </el-descriptions>
-
-    <div>
-      <el-button>修改个人信息</el-button>
+    <div class="action-buttons">
+      <el-button type="primary" round>修改个人信息</el-button>
     </div>
     <div class="date-utils-wrapper">
       <DateUtils />
@@ -64,29 +63,30 @@
 
 <script>
 import DateUtils from "./DateUtils";
+import { User, Iphone, Location, Tickets, Male, Female } from "@element-plus/icons-vue";
 
 export default {
   name: "HomePage",
-  components: { DateUtils },
+  components: { DateUtils, User, Iphone, Location, Tickets, Male, Female },
   data() {
     return {
-      user: {}
+      user: {},
     };
   },
   computed: {
     column() {
-      return this.$isMobile ? 1 : 2; // 响应式列数
-    }
+      return this.$isMobile ? 1 : 2;
+    },
   },
   methods: {
     init() {
       const curUser = sessionStorage.getItem('CurUser');
       this.user = curUser ? JSON.parse(curUser) : {};
-    }
+    },
   },
   created() {
     this.init();
-  }
+  },
 };
 </script>
 
@@ -94,19 +94,18 @@ export default {
 .home-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #eceff5, #f7f9fc);
-  padding: 40px 20px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 30px;
+  gap: 20px;
 }
 
 .welcome-title {
-  font-size: clamp(24px, 5vw, 32px);
-  font-weight: bold;
-  color: #333;
+  font-size: 28px;
+  font-weight: 600;
+  color: #303133;
   text-align: center;
-  margin: 0;
   animation: fadeIn 0.8s ease-in-out;
 }
 
@@ -115,39 +114,21 @@ export default {
   max-width: 800px;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   padding: 20px;
   animation: slideIn 0.8s ease-in-out;
 }
 
-.user-info :deep(.el-descriptions__title) {
-  font-size: 20px;
-  color: #333;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.user-info :deep(.el-descriptions__label) {
+.action-buttons {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #666;
-  background-color: #f8faff;
+  gap: 10px;
 }
 
-.user-info :deep(.el-descriptions__content) {
-  color: #333;
-  font-size: 14px;
+.el-button {
+  transition: transform 0.2s;
 }
 
-.el-tag {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: transform 0.3s;
-}
-
-.el-tag:hover {
+.el-button:hover {
   transform: scale(1.05);
 }
 
@@ -156,46 +137,31 @@ export default {
   max-width: 800px;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   padding: 20px;
   animation: slideIn 0.8s ease-in-out 0.2s;
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @media (max-width: 768px) {
   .home-container {
-    padding: 20px 10px;
+    padding: 10px;
   }
 
   .welcome-title {
-    font-size: 24px;
+    font-size: 22px;
   }
 
-  .user-info {
-    padding: 15px;
-  }
-
+  .user-info,
   .date-utils-wrapper {
     padding: 15px;
   }
