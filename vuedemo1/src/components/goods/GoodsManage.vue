@@ -1,39 +1,60 @@
 <script>
-import { ElMessage } from "element-plus";
+import {ElMessage} from "element-plus";
+import {List} from "@element-plus/icons-vue";
 
 export default {
   name: "GoodsManagePart",
+  components: {List},
   data() {
     return {
+      goodstypeData: [],
+      storageData: [],
       tableData: [],
       pageSize: 10,
       pageNum: 1,
       total: 0,
       name: '',
+      storage: '',
+      goodstype: '',
       centerDialogVisible: false,
       form: {
         id: '',
         name: '',
-        storage: '111',
-        goodstype: '11',
+        storage: '',
+        goodstype: '',
         count: '',
         remark: ''
       },
       rules: {
         name: [
-          { required: true, message: '请输入姓名', trigger: 'blur' },
-          { min: 2, max: 8, message: '长度应该在2-8个字符之间', trigger: 'blur' },
+          {required: true, message: '请输入姓名', trigger: 'blur'},
+          {min: 2, max: 8, message: '长度应该在2-8个字符之间', trigger: 'blur'},
         ],
         goodstype: [
-          {required: true}
+          {required: true, message: '请选择分类', trigger: 'change'}
         ],
         storage: [
-          {required: true}
+          {required: true, message: '请选择仓库', trigger: 'change'}
+        ],
+        count: [
+          {required: true, message: '请输入', trigger: 'blur'}
         ],
       }
     };
   },
   methods: {
+    formatStorage(row) {
+      let temp = this.storageData.find(item => {
+        return item.id == row.storage
+      })
+      return temp && temp.name
+    },
+    formatGoodstype(row) {
+      let temp = this.goodstypeData.find(item => {
+        return item.id == row.goodstype
+      })
+      return temp && temp.name
+    },
     handleSizeChange(val) {
       this.pageNum = 1;
       this.pageSize = val;
@@ -48,7 +69,7 @@ export default {
           .post(this.$httpUrl + '/goods/listPage', {
             pageSize: this.pageSize,
             pageNum: this.pageNum,
-            param: { name: this.name }
+            param: {name: this.name, storage: this.storage + '', goodstype: this.goodstype + ''}
           })
           .then(res => res.data)
           .then(res => {
@@ -62,6 +83,11 @@ export default {
     },
     resetForm() {
       this.$refs.form.resetFields();
+    },
+    resetParam() {
+      this.name = ''
+      this.storage = ''
+      this.goodstype = ''
     },
     mod(row) {
       this.centerDialogVisible = true;
@@ -143,9 +169,38 @@ export default {
               ElMessage.error('新增失败！');
             }
           });
-    }
+    },
+    loadStorage() {
+      this.$http
+          .get(this.$httpUrl + '/storage/list')
+          .then(res => res.data)
+          .then(res => {
+            if (res.code === 200) {
+              this.storageData = res.data;
+
+            } else {
+              ElMessage.error('获取数据失败');
+            }
+          });
+    },
+    loadGoodstype() {
+      this.$http
+          .get(this.$httpUrl + '/goodstype/list')
+          .then(res => res.data)
+          .then(res => {
+            if (res.code === 200) {
+              this.goodstypeData = res.data;
+
+            } else {
+              ElMessage.error('获取数据失败');
+            }
+          });
+    },
   },
+
   beforeMount() {
+    this.loadStorage()
+    this.loadGoodstype()
     this.loadPost();
   }
 };
@@ -163,10 +218,51 @@ export default {
           class="search-input"
       >
         <template #suffix>
-          <el-icon><Search /></el-icon>
+          <el-icon>
+            <Search/>
+          </el-icon>
         </template>
       </el-input>
+
+      <el-select
+          v-model="storage"
+          placeholder="请选择仓库">
+        <el-option
+            v-for="item in storageData"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+            clearable
+            @keyup.enter="loadPost"
+
+        >
+          <template #suffix>
+            <el-icon>
+              <List/>
+            </el-icon>
+          </template>
+        </el-option>
+      </el-select>
+      <el-select
+          v-model="goodstype"
+          placeholder="请选择分类">
+        <el-option
+            v-for="item in goodstypeData"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+            clearable
+            @keyup.enter="loadPost"
+        >
+          <template #suffix>
+            <el-icon>
+              <List/>
+            </el-icon>
+          </template>
+        </el-option>
+      </el-select>
       <el-button type="primary" @click="loadPost" class="search-btn">查询</el-button>
+      <el-button type="primary" @click="resetParam" class="add-btn">重置</el-button>
       <el-button type="success" @click="add" class="add-btn">新增</el-button>
     </div>
 
@@ -179,12 +275,12 @@ export default {
           stripe
           border
       >
-        <el-table-column prop="id" label="ID" width="100" align="center" sortable />
-        <el-table-column prop="name" label="名字" width="200" align="center" sortable />
-        <el-table-column prop="storage" label="仓库" width="200" align="center"  />
-        <el-table-column prop="goodstype" label="分类" width="200" align="center"  />
-        <el-table-column prop="count" label="数量" width="200" align="center"  />
-        <el-table-column prop="remark" label="备注" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="id" label="ID" width="100" align="center" sortable/>
+        <el-table-column prop="name" label="名字" width="200" align="center" sortable/>
+        <el-table-column prop="storage" label="仓库" width="200" align="center" :formatter="formatStorage"/>
+        <el-table-column prop="goodstype" label="分类" width="200" align="center" :formatter="formatGoodstype"/>
+        <el-table-column prop="count" label="数量" width="200" align="center"/>
+        <el-table-column prop="remark" label="备注" min-width="200" show-overflow-tooltip/>
         <el-table-column label="操作" width="180" align="center">
           <template #default="scope">
             <el-button
@@ -242,16 +338,30 @@ export default {
           class="dialog-form"
       >
         <el-form-item label="名字" prop="name">
-          <el-input v-model="form.name" placeholder="请输入" />
+          <el-input v-model="form.name" placeholder="请输入"/>
         </el-form-item>
         <el-form-item label="仓库" prop="storage">
-          <el-input v-model="form.storage" placeholder="请输入" />
+          <el-select v-model="form.storage" placeholder="请选择仓库">
+            <el-option
+                v-for="item in storageData"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="分类" prop="goodstype">
-          <el-input v-model="form.goodstype" placeholder="请输入" />
+          <el-select v-model="form.goodstype" placeholder="请选择分类">
+            <el-option
+                v-for="item in goodstypeData"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="数量" prop="count">
-          <el-input v-model="form.count" placeholder="请输入" />
+          <el-input v-model="form.count" placeholder="请输入"/>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
           <el-input

@@ -52,7 +52,9 @@ public class GoodsController {
     @PostMapping("/listPage")
     public Result listPage(@RequestBody QueryPageParam query) {
         HashMap param = query.getParam();
-        String name = (String) param.get("name");
+        String name = param.get("name").toString();
+        String storage =  param.get("storage").toString();
+        String goodstype =  param.get("goodstype").toString();
 
 
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<Goods> page = new Page<>();
@@ -63,12 +65,17 @@ public class GoodsController {
         if (StringUtils.isNotBlank(name) && !"null".equals(name)) {
             lambdaQueryWrapper.like(Goods::getName, name);
         }
+        if (StringUtils.isNotBlank(storage) && !"null".equals(storage)) {
+            lambdaQueryWrapper.eq(Goods::getStorage, storage);
+        }
+        if (StringUtils.isNotBlank(goodstype) && !"null".equals(goodstype)) {
+            lambdaQueryWrapper.eq(Goods::getGoodstype, goodstype);
+        }
 
-
-        IPage result = goodsService.pageS(page, lambdaQueryWrapper);
-
-
+        // 执行分页查询
+        IPage<Goods> result = goodsService.page(page, lambdaQueryWrapper);
         return Result.success(result.getRecords(), result.getTotal());
     }
+
 }
 
