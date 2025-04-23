@@ -1,5 +1,7 @@
 package com.weee.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+
 import java.sql.Timestamp;
 import java.io.Serializable;
 
@@ -39,6 +41,10 @@ public class Record implements Serializable {
      * 备注
      */
     private String remark;
+
+
+    @TableField(exist = false)
+    private String action;
 
 
     public Integer getId() {
@@ -96,5 +102,13 @@ public class Record implements Serializable {
         this.remark = remark;
     }
 
+
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
+    }
 }
 

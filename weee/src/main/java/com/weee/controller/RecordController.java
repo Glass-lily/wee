@@ -40,6 +40,8 @@ public class RecordController {
         String name = param.get("name").toString();
         String storage =  param.get("storage").toString();
         String goodstype =  param.get("goodstype").toString();
+        String roleId =  param.get("roleId").toString();
+        String userId =  param.get("userId").toString();
 
 
         com.baomidou.mybatisplus.extension.plugins.pagination.Page<Record> page = new Page<>();
@@ -48,6 +50,10 @@ public class RecordController {
 
         QueryWrapper<Record> queryWrapper = new QueryWrapper<>();
         queryWrapper.apply(" a.goods=b.id AND b.storage=c.id AND b.goodsType=d.id ");
+        if ("2".equals(roleId)) {
+           queryWrapper.apply(" a.userId= "+userId);
+        }
+
         if (StringUtils.isNotBlank(name) && !"null".equals(name)) {
             queryWrapper.like("b.name",name);
         }
@@ -71,6 +77,10 @@ public class RecordController {
         record.setCreatetime(currentTimestamp);
         Goods goods= goodsService.getById(record.getGoods());
         int n=record.getCount();
+        if ("2".equals(record.getAction())){
+            n=-n;
+            record.setCount(n);
+        }
         int num = goods.getCount()+n;
         goods.setCount(num);
         goodsService.updateById(goods);

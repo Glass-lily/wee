@@ -7,6 +7,7 @@ export default {
   components: {List},
   data() {
     return {
+      user: JSON.parse(sessionStorage.getItem('CurUser')),
       goodstypeData: [],
       storageData: [],
       tableData: [],
@@ -44,7 +45,13 @@ export default {
           .post(this.$httpUrl + '/record/listPage', {
             pageSize: this.pageSize,
             pageNum: this.pageNum,
-            param: {name: this.name, storage: this.storage + '', goodstype: this.goodstype + ''}
+            param: {
+              name: this.name,
+              storage: this.storage + '',
+              goodstype: this.goodstype + '',
+              roleId: this.user.roleId + '',
+              userId: this.user.id + '',
+            }
           })
           .then(res => res.data)
           .then(res => {
@@ -55,7 +62,7 @@ export default {
               ElMessage.error('获取数据失败');
             }
           });
-    },loadStorage() {
+    }, loadStorage() {
       this.$http
           .get(this.$httpUrl + '/storage/list')
           .then(res => res.data)
@@ -168,8 +175,8 @@ export default {
       >
         <el-table-column prop="id" label="ID" width="100" align="center" sortable/>
         <el-table-column prop="goodsname" label="名字" width="200" align="center" sortable/>
-        <el-table-column prop="storagename" label="仓库" width="200" align="center" />
-        <el-table-column prop="goodstypename" label="分类" width="200" align="center" />
+        <el-table-column prop="storagename" label="仓库" width="200" align="center"/>
+        <el-table-column prop="goodstypename" label="分类" width="200" align="center"/>
         <el-table-column prop="adminname" label="管理人" width="200" align="center"/>
         <el-table-column prop="username" label="操作人" width="200" align="center"/>
         <el-table-column prop="createtime" label="操作时间" width="200" align="center">

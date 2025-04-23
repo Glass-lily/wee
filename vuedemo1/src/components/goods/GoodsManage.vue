@@ -1,10 +1,11 @@
 <script>
 import {ElMessage} from "element-plus";
 import {List} from "@element-plus/icons-vue";
+import SelectUserManagePart from "@/components/user/SelectUser.vue";
 
 export default {
   name: "GoodsManagePart",
-  components: {List},
+  components: {SelectUserManagePart, List},
   data() {
     return {
       user: JSON.parse(sessionStorage.getItem('CurUser')),
@@ -19,7 +20,9 @@ export default {
       goodstype: '',
       centerDialogVisible: false,
       inDialogVisible: false,
+      innerVisible: false,
       currentRow: {},
+      tempUser:{},
       form: {
         id: '',
         name: '',
@@ -30,11 +33,13 @@ export default {
       },
       form1: {
         goods: '',
-        goodsname:'',
+        goodsname: '',
         count: '',
-        userid:'13',
-        admin_id:'',
-        remark: ''
+        userid: '',
+        username: '',
+        admin_id: '',
+        remark: '',
+        action:'1'
       },
       rules: {
         name: [
@@ -51,12 +56,20 @@ export default {
           {required: true, message: '请输入', trigger: 'blur'}
         ],
       },
-      rules1:{
-
-      }
+      rules1: {}
     };
   },
   methods: {
+    doSelectUser(val){
+   //   console.log(val)
+      this.tempUser=val
+    },
+    confirmUser(){
+      this.form1.username=this.tempUser.name
+      this.form1.userid=this.tempUser.id
+
+      this.innerVisible=false
+    },
     selectCurrentChange(val) {
       this.currentRow = val;
 
@@ -144,7 +157,7 @@ export default {
       });
     },
     inGoods() {
-      if(!this.currentRow.id){
+      if (!this.currentRow.id) {
         alert("请选择记录!");
         return;
       }
@@ -152,9 +165,24 @@ export default {
       this.$nextTick(() => {
         this.resetInForm();
       })
-      this.form1.name=this.currentRow.name
-      this.form1.goods=this.currentRow.id
-      this.form1.adminId=this.user.id
+      this.form1.name = this.currentRow.name
+      this.form1.goods = this.currentRow.id
+      this.form1.adminId = this.user.id
+      this.form1.action='1'
+    },
+    outGoods(){
+      if (!this.currentRow.id) {
+        alert("请选择记录!");
+        return;
+      }
+      this.inDialogVisible = true;
+      this.$nextTick(() => {
+        this.resetInForm();
+      })
+      this.form1.name = this.currentRow.name
+      this.form1.goods = this.currentRow.id
+      this.form1.adminId = this.user.id
+      this.form1.action='2'
     },
     doInGoods() {
       this.$http
@@ -205,6 +233,10 @@ export default {
             }
           });
     },
+    selectUser() {
+      this.innerVisible = true
+    },
+
     doSave() {
       this.$http
           .post(this.$httpUrl + '/goods/save', this.form)
@@ -315,8 +347,9 @@ export default {
       </el-select>
       <el-button type="primary" @click="loadPost" class="search-btn">查询</el-button>
       <el-button type="primary" @click="resetParam" class="add-btn">重置</el-button>
-      <el-button type="success" @click="add" class="add-btn">新增</el-button>
-      <el-button type="success" @click="inGoods" >入库</el-button>
+      <el-button type="success" @click="add" class="add-btn" v-if="user.roleId!=2">新增</el-button>
+      <el-button type="success" @click="inGoods" v-if="user.roleId!=2">入库</el-button>
+      <el-button type="success" @click="outGoods" v-if="user.roleId!=2">出库</el-button>
     </div>
 
     <!-- 表格区域 -->
@@ -336,7 +369,7 @@ export default {
         <el-table-column prop="goodstype" label="分类" width="200" align="center" :formatter="formatGoodstype"/>
         <el-table-column prop="count" label="数量" width="200" align="center"/>
         <el-table-column prop="remark" label="备注" min-width="200" show-overflow-tooltip/>
-        <el-table-column label="操作" width="180" align="center">
+        <el-table-column label="操作" width="180" align="center" v-if="user.roleId!=2">
           <template #default="scope">
             <el-button
                 type="primary"
@@ -442,6 +475,18 @@ export default {
         center
         :close-on-click-modal="false"
     >
+      <el-dialog
+          v-model="innerVisible"
+          width="700"
+          title="用户选择"
+          append-to-body
+      >
+        <SelectUserManagePart @doSelectUser="doSelectUser"></SelectUserManagePart>
+        <div class="dialog-footer">
+          <el-button @click="innerVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmUser">确认</el-button>
+        </div>
+      </el-dialog>
       <el-form
           ref="form1"
           :rules="rules1"
@@ -449,10 +494,12 @@ export default {
           label-width="80px"
           class="dialog-form"
       >
-        <el-form-item label="名字" >
-          <el-input v-model="form1.name" readonly />
+        <el-form-item label="名字">
+          <el-input v-model="form1.name" readonly/>
         </el-form-item>
-
+        <el-form-item label="操作人">
+          <el-input v-model="form1.username" readonly @click="selectUser"/>
+        </el-form-item>
 
         <el-form-item label="数量" prop="count">
           <el-input v-model="form1.count" placeholder="请输入"/>
