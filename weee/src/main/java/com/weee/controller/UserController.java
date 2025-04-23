@@ -51,10 +51,64 @@ public class UserController {
         return userService.save(user) ? Result.success() : Result.fail();
     }
 
-    //更新
     @PostMapping("/update")
     public Result update(@RequestBody User user) {
-        return userService.updateById(user) ? Result.success() : Result.fail();
+        System.out.println("Received /user/update request: " + user);
+        // 校验输入
+        if (user.getId() == 0) {
+            Result result = Result.fail();
+            result.setMsg("用户ID不能为空");
+            return result;
+        }
+        if (user.getName() != null && (user.getName().length() < 2 || user.getName().length() > 100)) {
+            Result result = Result.fail();
+            result.setMsg("姓名长度应为2到100个字符");
+            return result;
+        }
+        if (user.getPhone() != null && !user.getPhone().matches("^1[3-9]\\d{9}$")) {
+            Result result = Result.fail();
+            result.setMsg("请输入有效的手机号码");
+            return result;
+        }
+        if (user.getSex() != null && !user.getSex().matches("^[0-1]$")) {
+            Result result = Result.fail();
+            result.setMsg("性别只能为0或1");
+            return result;
+        }
+        if (user.getPassword() != null && (user.getPassword().length() < 6 || user.getPassword().length() > 20)) {
+            Result result = Result.fail();
+            result.setMsg("密码长度应为6到20个字符");
+            return result;
+        }
+
+        // 校验用户是否存在且有效
+        User existingUser = userService.lambdaQuery()
+                .eq(User::getId, user.getId())
+                .eq(User::getIsValid, "Y")
+                .one();
+        if (existingUser == null) {
+            Result result = Result.fail();
+            result.setMsg("用户不存在或已失效");
+            return result;
+        }
+
+        // 更新字段（只更新非空字段）
+        existingUser.setName(user.getName() != null ? user.getName() : existingUser.getName());
+        existingUser.setPhone(user.getPhone() != null ? user.getPhone() : existingUser.getPhone());
+        existingUser.setSex(user.getSex() != null ? user.getSex() : existingUser.getSex());
+        if (user.getPassword() != null) {
+            existingUser.setPassword(user.getPassword()); // 假设密码明文存储，生产环境应加密
+        }
+
+        // 执行更新
+        boolean updated = userService.updateById(existingUser);
+        if (updated) {
+            return Result.success("个人信息更新成功");
+        } else {
+            Result result = Result.fail();
+            result.setMsg("更新失败，请稍后重试");
+            return result;
+        }
     }
 
     //登录
