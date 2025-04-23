@@ -66,8 +66,17 @@
         </el-tag>
       </el-descriptions-item>
     </el-descriptions>
+
+    <!-- 修改个人信息按钮 -->
     <div class="action-buttons">
-      <el-button type="primary" round @click="openEditDialog">修改个人信息</el-button>
+      <el-button
+          type="primary"
+          round
+          @click="openEditDialog"
+          class="fadeInBtn"
+      >
+        修改个人信息
+      </el-button>
     </div>
     <div class="date-utils-wrapper">
       <DateUtils />
@@ -304,19 +313,11 @@ export default {
 .action-buttons {
   display: flex;
   gap: 15px;
+  animation: slideIn 1s ease-in-out;
 }
-
-.el-button {
-  padding: 12px 24px;
-  font-size: 16px;
-  transition: all 0.3s ease;
+.fadeInBtn {
+  animation: slideIn 1s ease-in-out;
 }
-
-.el-button:hover {
-  transform: scale(1.08);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
 .date-utils-wrapper {
   width: 100%;
   max-width: 900px;
@@ -333,21 +334,13 @@ export default {
 }
 
 .edit-dialog {
-  animation: fadeIn 0.5s ease-in-out;
+
+  animation: slideIn 0.8s ease-in-out;
+  transition: transform 0.3s ease;
 }
 
 .form-item {
   animation: slideIn 0.5s ease-in-out;
-}
-
-.el-input {
-  transition: all 0.3s ease;
-}
-
-.el-input:hover,
-.el-input:focus {
-  border-color: #409EFF;
-  box-shadow: 0 0 8px rgba(64, 158, 255, 0.3);
 }
 
 @keyframes fadeIn {
@@ -387,14 +380,6 @@ export default {
     max-width: 100%;
   }
 
-  .el-button {
-    padding: 10px 20px;
-    font-size: 14px;
-  }
-
-  .el-descriptions {
-    font-size: 14px;
-  }
 }
 
 .dialog-footer {
