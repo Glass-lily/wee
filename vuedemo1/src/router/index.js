@@ -70,7 +70,7 @@ const routes=[
                 path:'/Record',
                 name:'record',
                 meta:{
-                    title:'记录管理'
+                    title:'操作记录'
 
                 },
                 component:()=>import('@/components/record/RecordManage.vue')

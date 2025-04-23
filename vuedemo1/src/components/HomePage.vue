@@ -3,10 +3,10 @@ export default {
   name: "HomePage",
   data() {
     return {
-      user: JSON.parse(sessionStorage.getItem('CurUser')) || { name: '用户' }, // Get user from session storage
-      welcomeMessage: '欢迎来到知识库管理系统！', // Default welcome message
-      recentActivity: ['修改资料', '查看文档', '参与讨论'], // Sample recent activities
-      tableData: [ // Sample table data
+      user: JSON.parse(sessionStorage.getItem('CurUser')) || { name: '用户' },
+      welcomeMessage: '欢迎来到知识库管理系统！',
+      recentActivity: ['修改资料', '查看文档', '参与讨论'],
+      tableData: [
         { name: '文档A', description: '描述A', date: '2025-04-15' },
         { name: '文档B', description: '描述B', date: '2025-04-14' },
         { name: '文档C', description: '描述C', date: '2025-04-13' },
@@ -36,7 +36,7 @@ export default {
       </ul>
     </div>
 
-    <!-- Full-width Table -->
+
     <div class="table-container">
       <h3>文档列表</h3>
       <table class="full-width-table">
@@ -63,7 +63,7 @@ export default {
 .home-container {
   padding: 20px;
   font-family: Arial, sans-serif;
-  height: 100vh; /* Full height of the viewport */
+  height: 100vh;
   display: flex;
   flex-direction: column;
 }

@@ -49,8 +49,8 @@ export default {
               name: this.name,
               storage: this.storage + '',
               goodstype: this.goodstype + '',
-              roleId: this.user.roleId + '',
-              userId: this.user.id + '',
+              roleId:this.user.roleId+ '',
+              userId:this.user.id+ ''
             }
           })
           .then(res => res.data)
