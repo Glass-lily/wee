@@ -1,22 +1,22 @@
 package com.weee.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.weee.common.QueryPageParam;
 import com.weee.common.Result;
+import com.weee.entity.Goods;
 import com.weee.entity.Record;
+import com.weee.service.GoodsService;
 import com.weee.service.RecordService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
+import java.sql.Timestamp;
+
 import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * (Record)表控制层
@@ -30,6 +30,8 @@ import java.util.Optional;
 public class RecordController {
     @Autowired
     private RecordService recordService;
+    @Autowired
+    private GoodsService goodsService;
 
 
     @PostMapping("/listPage")
@@ -62,13 +64,19 @@ public class RecordController {
 
         return Result.success(result.getRecords(), result.getTotal());
     }
-//
-//    @GetMapping("/list")
-//    public Result list() {
-//        List list= recordService.list();
-//        System.out.println(list);
-//        return Result.success(list);
-//    }
+    //新增
+    @PostMapping("/save")
+    public Result save(@RequestBody Record record){
+        Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
+        record.setCreatetime(currentTimestamp);
+        Goods goods= goodsService.getById(record.getGoods());
+        int n=record.getCount();
+        int num = goods.getCount()+n;
+        goods.setCount(num);
+        goodsService.updateById(goods);
+
+        return recordService.save(record)?Result.success():Result.fail();
+    }
 
 }
 

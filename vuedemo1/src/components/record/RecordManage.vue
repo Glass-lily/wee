@@ -172,7 +172,8 @@ export default {
         <el-table-column prop="goodstypename" label="分类" width="200" align="center" />
         <el-table-column prop="adminname" label="管理人" width="200" align="center"/>
         <el-table-column prop="username" label="操作人" width="200" align="center"/>
-        <el-table-column prop="creattime" label="操作时间" width="200" align="center"/>
+        <el-table-column prop="createtime" label="操作时间" width="200" align="center">
+        </el-table-column>
         <el-table-column prop="remark" label="备注" min-width="200" show-overflow-tooltip/>
 
       </el-table>

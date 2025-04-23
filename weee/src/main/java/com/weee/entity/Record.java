@@ -1,6 +1,6 @@
 package com.weee.entity;
 
-import java.util.Date;
+import java.sql.Timestamp;
 import java.io.Serializable;
 
 /**
@@ -34,7 +34,7 @@ public class Record implements Serializable {
 /**
      * 操作时间
      */
-    private Date createtime;
+    private Timestamp createtime;
 /**
      * 备注
      */
@@ -81,14 +81,13 @@ public class Record implements Serializable {
         this.count = count;
     }
 
-    public Date getCreatetime() {
+    public Timestamp getCreatetime() {
         return createtime;
     }
 
-    public void setCreatetime(Date createtime) {
+    public void setCreatetime(Timestamp createtime) {
         this.createtime = createtime;
     }
-
     public String getRemark() {
         return remark;
     }

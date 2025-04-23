@@ -7,6 +7,7 @@ export default {
   components: {List},
   data() {
     return {
+      user: JSON.parse(sessionStorage.getItem('CurUser')),
       goodstypeData: [],
       storageData: [],
       tableData: [],
@@ -17,12 +18,22 @@ export default {
       storage: '',
       goodstype: '',
       centerDialogVisible: false,
+      inDialogVisible: false,
+      currentRow: {},
       form: {
         id: '',
         name: '',
         storage: '',
         goodstype: '',
         count: '',
+        remark: ''
+      },
+      form1: {
+        goods: '',
+        goodsname:'',
+        count: '',
+        userid:'13',
+        admin_id:'',
         remark: ''
       },
       rules: {
@@ -39,10 +50,17 @@ export default {
         count: [
           {required: true, message: '请输入', trigger: 'blur'}
         ],
+      },
+      rules1:{
+
       }
     };
   },
   methods: {
+    selectCurrentChange(val) {
+      this.currentRow = val;
+
+    },
     formatStorage(row) {
       let temp = this.storageData.find(item => {
         return item.id == row.storage
@@ -84,6 +102,9 @@ export default {
     resetForm() {
       this.$refs.form.resetFields();
     },
+    resetInForm() {
+      this.$refs.form1.resetFields();
+    },
     resetParam() {
       this.name = ''
       this.storage = ''
@@ -121,6 +142,37 @@ export default {
       this.$nextTick(() => {
         this.resetForm();
       });
+    },
+    inGoods() {
+      if(!this.currentRow.id){
+        alert("请选择记录!");
+        return;
+      }
+      this.inDialogVisible = true;
+      this.$nextTick(() => {
+        this.resetInForm();
+      })
+      this.form1.name=this.currentRow.name
+      this.form1.goods=this.currentRow.id
+      this.form1.adminId=this.user.id
+    },
+    doInGoods() {
+      this.$http
+          .post(this.$httpUrl + '/record/save', this.form1)
+          .then(res => res.data)
+          .then(res => {
+            if (res.code === 200) {
+              ElMessage({
+                message: '新增成功！',
+                type: 'success'
+              });
+              this.inDialogVisible = false;
+              this.loadPost();
+              this.resetInForm()
+            } else {
+              ElMessage.error('新增失败！');
+            }
+          });
     },
     save() {
       this.$refs.form.validate(valid => {
@@ -264,6 +316,7 @@ export default {
       <el-button type="primary" @click="loadPost" class="search-btn">查询</el-button>
       <el-button type="primary" @click="resetParam" class="add-btn">重置</el-button>
       <el-button type="success" @click="add" class="add-btn">新增</el-button>
+      <el-button type="success" @click="inGoods" >入库</el-button>
     </div>
 
     <!-- 表格区域 -->
@@ -274,6 +327,8 @@ export default {
           height="500px"
           stripe
           border
+          highlight-current-row
+          @current-change="selectCurrentChange"
       >
         <el-table-column prop="id" label="ID" width="100" align="center" sortable/>
         <el-table-column prop="name" label="名字" width="200" align="center" sortable/>
@@ -376,6 +431,45 @@ export default {
         <div class="dialog-footer">
           <el-button @click="centerDialogVisible = false">取消</el-button>
           <el-button type="primary" @click="save">确认</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+        v-model="inDialogVisible"
+        title="存储信息"
+        width="500px"
+        center
+        :close-on-click-modal="false"
+    >
+      <el-form
+          ref="form1"
+          :rules="rules1"
+          :model="form1"
+          label-width="80px"
+          class="dialog-form"
+      >
+        <el-form-item label="名字" >
+          <el-input v-model="form1.name" readonly />
+        </el-form-item>
+
+
+        <el-form-item label="数量" prop="count">
+          <el-input v-model="form1.count" placeholder="请输入"/>
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input
+              v-model="form1.remark"
+              type="textarea"
+              :rows="4"
+              placeholder="请输入备注"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="inDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="doInGoods">确认</el-button>
         </div>
       </template>
     </el-dialog>
