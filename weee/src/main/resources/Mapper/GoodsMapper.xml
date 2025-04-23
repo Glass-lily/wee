@@ -11,7 +11,7 @@
         <result property="remark" column="remark" jdbcType="VARCHAR"/>
     </resultMap>
     <select id="pageS" resultType="com.weee.entity.Goods">
-        select * from user ${ew.customSqlSegment}
+        select * from goods ${ew.customSqlSegment}
     </select>
     <!--查询单个-->
     <select id="queryById" resultMap="GoodsMap">

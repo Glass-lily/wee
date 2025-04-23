@@ -8,7 +8,7 @@
         <result property="remark" column="remark" jdbcType="VARCHAR"/>
     </resultMap>
     <select id="pageS" resultType="com.weee.entity.Goodstype">
-        select * from user ${ew.customSqlSegment}
+        select * from goodstype ${ew.customSqlSegment}
     </select>
     <!--查询单个-->
     <select id="queryById" resultMap="GoodstypeMap">

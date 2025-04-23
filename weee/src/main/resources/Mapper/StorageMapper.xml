@@ -8,7 +8,7 @@
         <result property="remark" column="remark" jdbcType="VARCHAR"/>
     </resultMap>
     <select id="pageS" resultType="com.weee.entity.Storage">
-        select * from user ${ew.customSqlSegment}
+        select * from storage ${ew.customSqlSegment}
     </select>
 
     <!--查询单个-->

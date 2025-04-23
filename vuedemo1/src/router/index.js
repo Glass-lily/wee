@@ -70,10 +70,10 @@ const routes=[
                 path:'/Record',
                 name:'record',
                 meta:{
-                    title:'知识分类管理'
+                    title:'记录管理'
 
                 },
-                component:()=>import('@/components/goodstype/GoodstypeManage.vue')
+                component:()=>import('@/components/record/RecordManage.vue')
             },
             {
                 path:'/PersonCenter',

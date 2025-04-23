@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.weee.mapper.RecordMapper">
+
+    <resultMap type="com.weee.entity.Record" id="RecordMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="goods" column="goods" jdbcType="INTEGER"/>
+        <result property="userid" column="userId" jdbcType="INTEGER"/>
+        <result property="adminId" column="admin_id" jdbcType="INTEGER"/>
+        <result property="count" column="count" jdbcType="INTEGER"/>
+        <result property="createtime" column="createtime" jdbcType="TIMESTAMP"/>
+        <result property="remark" column="remark" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="pageS" resultType="com.weee.entity.RecordRes">
+        SELECT a.* , b.name  goodsname,c.name storagename,d.name goodstypename,
+               (SELECT u.name FROM user u WHERE u.id=a.userId)username,
+               (SELECT u.name FROM user u WHERE u.id=a.admin_id)adminname
+        FROM record a , goods b,storage c ,goodstype d
+--         WHERE a.goods=b.id AND b.storage=c.id AND b.goodsType=d.id
+            ${ew.customSqlSegment}
+    </select>
+    <!--查询单个-->
+    <select id="queryById" resultMap="RecordMap">
+        select
+id, goods, userId, admin_id, count, createtime, remark
+        from record
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="RecordMap">
+        select
+        id, goods, userId, admin_id, count, createtime, remark
+        from record
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="goods != null">
+                and goods = #{goods}
+            </if>
+            <if test="userid != null">
+                and userId = #{userid}
+            </if>
+            <if test="adminId != null">
+                and admin_id = #{adminId}
+            </if>
+            <if test="count != null">
+                and count = #{count}
+            </if>
+            <if test="createtime != null">
+                and createtime = #{createtime}
+            </if>
+            <if test="remark != null and remark != ''">
+                and remark = #{remark}
+            </if>
+        </where>
+        limit #{pageable.offset}, #{pageable.pageSize}
+    </select>
+
+    <!--统计总行数-->
+    <select id="count" resultType="java.lang.Long">
+        select count(1)
+        from record
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="goods != null">
+                and goods = #{goods}
+            </if>
+            <if test="userid != null">
+                and userId = #{userid}
+            </if>
+            <if test="adminId != null">
+                and admin_id = #{adminId}
+            </if>
+            <if test="count != null">
+                and count = #{count}
+            </if>
+            <if test="createtime != null">
+                and createtime = #{createtime}
+            </if>
+            <if test="remark != null and remark != ''">
+                and remark = #{remark}
+            </if>
+        </where>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into record(goods, userId, admin_id, count, createtime, remark)
+        values (#{goods}, #{userid}, #{adminId}, #{count}, #{createtime}, #{remark})
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into record(goods, userId, admin_id, count, createtime, remark)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+        (#{entity.goods}, #{entity.userid}, #{entity.adminId}, #{entity.count}, #{entity.createtime}, #{entity.remark})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into record(goods, userId, admin_id, count, createtime, remark)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.goods}, #{entity.userid}, #{entity.adminId}, #{entity.count}, #{entity.createtime}, #{entity.remark})
+        </foreach>
+        on duplicate key update
+goods = values(goods),
+userId = values(userId),
+admin_id = values(admin_id),
+count = values(count),
+createtime = values(createtime),
+remark = values(remark)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update record
+        <set>
+            <if test="goods != null">
+                goods = #{goods},
+            </if>
+            <if test="userid != null">
+                userId = #{userid},
+            </if>
+            <if test="adminId != null">
+                admin_id = #{adminId},
+            </if>
+            <if test="count != null">
+                count = #{count},
+            </if>
+            <if test="createtime != null">
+                createtime = #{createtime},
+            </if>
+            <if test="remark != null and remark != ''">
+                remark = #{remark},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete from record where id = #{id}
+    </delete>
+
+</mapper>
+
