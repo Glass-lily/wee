@@ -1,16 +1,276 @@
-<template>
-  <div class="home-container">
-    <!-- 欢迎信息 -->
-    <div class="welcome-message">
-      <h1>{{ welcomeMessage }}</h1>
-    </div>
+<script>
+import {ElMessage} from "element-plus";
+import {List} from "@element-plus/icons-vue";
+import SelectUserManagePart from "@/components/user/SelectUser.vue";
 
+export default {
+  name: "HomePage",
+  components: {SelectUserManagePart, List},
+  data() {
+    return {
+      user: JSON.parse(sessionStorage.getItem('CurUser')),
+      goodstypeData: [],
+      storageData: [],
+      tableData: [],
+      pageSize: 10,
+      pageNum: 1,
+      total: 0,
+      name: '',
+      storage: '',
+      goodstype: '',
+      centerDialogVisible: false,
+      inDialogVisible: false,
+      innerVisible: false,
+      currentRow: {},
+      tempUser:{},
+      form: {
+        id: '',
+        name: '',
+        storage: '',
+        goodstype: '',
+        count: '',
+        remark: ''
+      },
+      form1: {
+        goods: '',
+        goodsname: '',
+        count: '',
+        userid: '',
+        username: '',
+        admin_id: '',
+        remark: '',
+        action:'1'
+      },
+      rules: {
+        name: [
+          {required: true, message: '请输入姓名', trigger: 'blur'},
+          {min: 2, max: 8, message: '长度应该在2-8个字符之间', trigger: 'blur'},
+        ],
+        goodstype: [
+          {required: true, message: '请选择标签', trigger: 'change'}
+        ],
+        storage: [
+          {required: true, message: '请选择知识大类', trigger: 'change'}
+        ],
+        count: [
+          {required: true, message: '请输入', trigger: 'blur'}
+        ],
+      },
+      rules1: {}
+    };
+  },
+  methods: {
+    doSelectUser(val){
+      //   console.log(val)
+      this.tempUser=val
+    },
+    confirmUser(){
+      this.form1.username=this.tempUser.name
+      this.form1.userid=this.tempUser.id
+
+      this.innerVisible=false
+    },
+    selectCurrentChange(val) {
+      this.currentRow = val;
+
+    },
+    formatStorage(row) {
+      let temp = this.storageData.find(item => {
+        return item.id == row.storage
+      })
+      return temp && temp.name
+    },
+    formatGoodstype(row) {
+      let temp = this.goodstypeData.find(item => {
+        return item.id == row.goodstype
+      })
+      return temp && temp.name
+    },
+    handleSizeChange(val) {
+      this.pageNum = 1;
+      this.pageSize = val;
+      this.loadPost();
+    },
+    handleCurrentChange(val) {
+      this.pageNum = val;
+      this.loadPost();
+    },
+    loadPost() {
+      this.$http
+          .post(this.$httpUrl + '/text/listPage', {
+            pageSize: this.pageSize,
+            pageNum: this.pageNum,
+            param: {name: this.name, storage: this.storage + '', goodstype: this.goodstype + ''}
+          })
+          .then(res => res.data)
+          .then(res => {
+            if (res.code === 200) {
+              this.tableData = res.data;
+              this.total = res.total;
+            } else {
+              ElMessage.error('获取数据失败');
+            }
+          });
+    },
+    resetForm() {
+      this.$refs.form.resetFields();
+    },
+    resetInForm() {
+      this.$refs.form1.resetFields();
+    },
+    resetParam() {
+      this.name = ''
+      this.storage = ''
+      this.goodstype = ''
+    },
+    mod(row) {
+      this.centerDialogVisible = true;
+      this.$nextTick(() => {
+        this.form.id = row.id;
+        this.form.name = row.name;
+        this.form.storage = row.storage;
+        this.form.goodstype = row.goodstype;
+        this.form.count = row.count;
+        this.form.remark = row.remark;
+      });
+    },
+    del(id) {
+      this.$http
+          .get(this.$httpUrl + '/goods/del?id=' + id)
+          .then(res => res.data)
+          .then(res => {
+            if (res.code === 200) {
+              ElMessage({
+                message: '操作成功！',
+                type: 'success'
+              });
+              this.loadPost();
+            } else {
+              ElMessage.error('操作失败！');
+            }
+          });
+    },
+    add() {
+      this.centerDialogVisible = true;
+      this.$nextTick(() => {
+        this.resetForm();
+      });
+    },
+    doInGoods() {
+      this.$http
+          .post(this.$httpUrl + '/record/save', this.form1)
+          .then(res => res.data)
+          .then(res => {
+            if (res.code === 200) {
+              ElMessage({
+                message: '新增成功！',
+                type: 'success'
+              });
+              this.inDialogVisible = false;
+              this.loadPost();
+              this.resetInForm()
+            } else {
+              ElMessage.error('新增失败！');
+            }
+          });
+    },
+    save() {
+      this.$refs.form.validate(valid => {
+        if (valid) {
+          if (this.form.id) {
+            this.doMod();
+          } else {
+            this.doSave();
+          }
+        } else {
+          console.log('error submit!!');
+          return false;
+        }
+      });
+    },
+    doMod() {
+      this.$http
+          .post(this.$httpUrl + '/goods/update', this.form)
+          .then(res => res.data)
+          .then(res => {
+            if (res.code === 200) {
+              ElMessage({
+                message: '更新成功！',
+                type: 'success'
+              });
+              this.centerDialogVisible = false;
+              this.loadPost();
+            } else {
+              ElMessage.error('更新失败！');
+            }
+          });
+    },
+    selectUser() {
+      this.innerVisible = true
+    },
+
+    doSave() {
+      this.$http
+          .post(this.$httpUrl + '/goods/save', this.form)
+          .then(res => res.data)
+          .then(res => {
+            if (res.code === 200) {
+              ElMessage({
+                message: '新增成功！',
+                type: 'success'
+              });
+              this.centerDialogVisible = false;
+              this.loadPost();
+            } else {
+              ElMessage.error('新增失败！');
+            }
+          });
+    },
+    loadStorage() {
+      this.$http
+          .get(this.$httpUrl + '/storage/list')
+          .then(res => res.data)
+          .then(res => {
+            if (res.code === 200) {
+              this.storageData = res.data;
+
+            } else {
+              ElMessage.error('获取数据失败');
+            }
+          });
+    },
+    loadGoodstype() {
+      this.$http
+          .get(this.$httpUrl + '/goodstype/list')
+          .then(res => res.data)
+          .then(res => {
+            if (res.code === 200) {
+              this.goodstypeData = res.data;
+
+            } else {
+              ElMessage.error('获取数据失败');
+            }
+          });
+    },
+  },
+
+  beforeMount() {
+    this.loadStorage()
+    this.loadGoodstype()
+    this.loadPost();
+  }
+};
+</script>
+
+<template>
+  <div class="goods-container">
     <!-- 搜索区域 -->
     <div class="search-bar">
       <el-input
-          v-model="searchQuery"
-          placeholder="请输入文章名进行搜索"
+          v-model="name"
+          placeholder="请输入名字"
           clearable
+          @keyup.enter="loadPost"
           class="search-input"
       >
         <template #suffix>
@@ -19,99 +279,280 @@
           </el-icon>
         </template>
       </el-input>
-      <el-button type="primary" @click="searchArticles" class="search-btn">搜索</el-button>
+
+      <el-select
+          v-model="storage"
+          placeholder="请选择知识大类">
+        <el-option
+            v-for="item in storageData"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+            clearable
+            @keyup.enter="loadPost"
+
+        >
+          <template #suffix>
+            <el-icon>
+              <List/>
+            </el-icon>
+          </template>
+        </el-option>
+      </el-select>
+      <el-select
+          v-model="goodstype"
+          placeholder="请选择标签">
+        <el-option
+            v-for="item in goodstypeData"
+            :key="item.id"
+            :label="item.name"
+            :value="item.id"
+            clearable
+            @keyup.enter="loadPost"
+        >
+          <template #suffix>
+            <el-icon>
+              <List/>
+            </el-icon>
+          </template>
+        </el-option>
+      </el-select>
+      <el-button type="primary" @click="loadPost" class="search-btn">查询</el-button>
+      <el-button type="primary" @click="resetParam" class="add-btn">重置</el-button>
+      <el-button type="success" @click="add" class="add-btn" v-if="user.roleId!=2">新增</el-button>
     </div>
 
+    <!-- 表格区域 -->
+    <div class="table-wrapper">
+      <el-table
+          :data="tableData"
+          style="width: 100%"
+          height="500px"
+          stripe
+          border
+          highlight-current-row
+          @current-change="selectCurrentChange"
+      >
+        <el-table-column prop="id" label="ID" width="100" align="center" sortable/>
+        <el-table-column prop="name" label="名字" width="200" align="center" sortable/>
+        <el-table-column prop="content" label="内容" min-width="200" show-overflow-tooltip/>
+        <el-table-column prop="storage" label="知识大类" width="100" align="center" :formatter="formatStorage"/>
+        <el-table-column prop="goodstype" label="标签" width="100" align="center" :formatter="formatGoodstype"/>
+        <el-table-column prop="createdAt" label="创建时间" width="200" align="center" sortable/>
+        <el-table-column prop="updatedAt" label="更新时间" width="200" align="center" sortable/>
+        <el-table-column label="操作" width="180" align="center" v-if="user.roleId!=2">
+          <template #default="scope">
+            <el-button
+                type="primary"
+                size="small"
+                @click="mod(scope.row)"
+            >
+              编辑
+            </el-button>
+            <el-popconfirm
+                title="确定删除这条记录吗？"
+                @confirm="del(scope.row.id)"
+            >
+              <template #reference>
+                <el-button
+                    type="danger"
+                    size="small"
+                >
+                  删除
+                </el-button>
+              </template>
+            </el-popconfirm>
+          </template>
+        </el-table-column>
+      </el-table>
     </div>
 
+    <!-- 分页区域 -->
+    <div class="pagination-wrapper">
+      <el-pagination
+          v-model:current-page="pageNum"
+          v-model:page-size="pageSize"
+          :page-sizes="[5, 10, 20, 30]"
+          :background="true"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+      />
+    </div>
+
+    <!-- 对话框 -->
+    <el-dialog
+        v-model="centerDialogVisible"
+        title="存储信息"
+        width="500px"
+        center
+        :close-on-click-modal="false"
+    >
+      <el-form
+          ref="form"
+          :rules="rules"
+          :model="form"
+          label-width="80px"
+          class="dialog-form"
+      >
+        <el-form-item label="名字" prop="name">
+          <el-input v-model="form.name" placeholder="请输入"/>
+        </el-form-item>
+        <el-form-item label="知识大类" prop="storage">
+          <el-select v-model="form.storage" placeholder="请选择知识大类">
+            <el-option
+                v-for="item in storageData"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="标签" prop="goodstype">
+          <el-select v-model="form.goodstype" placeholder="请选择标签">
+            <el-option
+                v-for="item in goodstypeData"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="centerDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="save">确认</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+        v-model="inDialogVisible"
+        title="存储信息"
+        width="500px"
+        center
+        :close-on-click-modal="false"
+    >
+      <el-dialog
+          v-model="innerVisible"
+          width="700"
+          title="用户选择"
+          append-to-body
+      >
+        <SelectUserManagePart @doSelectUser="doSelectUser"></SelectUserManagePart>
+        <div class="dialog-footer">
+          <el-button @click="innerVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmUser">确认</el-button>
+        </div>
+      </el-dialog>
+      <el-form
+          ref="form1"
+          :rules="rules1"
+          :model="form1"
+          label-width="80px"
+          class="dialog-form"
+      >
+        <el-form-item label="名字">
+          <el-input v-model="form1.name" readonly/>
+        </el-form-item>
+        <el-form-item label="操作人">
+          <el-input v-model="form1.username" readonly @click="selectUser"/>
+        </el-form-item>
+
+        <el-form-item label="数量" prop="count">
+          <el-input v-model="form1.count" placeholder="请输入"/>
+        </el-form-item>
+        <el-form-item label="备注" prop="remark">
+          <el-input
+              v-model="form1.remark"
+              type="textarea"
+              :rows="4"
+              placeholder="请输入备注"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="inDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="doInGoods">确认</el-button>
+        </div>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
-<script>
-export default {
-  name: "HomePage",
-  data() {
-    return {
-      user: JSON.parse(sessionStorage.getItem('CurUser')) || { name: '用户' },
-      welcomeMessage: '欢迎来到知识库管理系统！',
-      searchQuery: '',
-      selectedArticle: null,
-      dialogVisible: false,
-    };
-  },
-  computed: {
-  },
-  created() {
-    if (this.user.name === '用户') {
-      this.welcomeMessage = '请先登录';
-    } else {
-      this.welcomeMessage = `欢迎回来, ${this.user.name}`;
-    }
-  },
-  methods: {
-
-  },
-};
-</script>
-
 <style scoped>
-.home-container {
+.goods-container {
   padding: 20px;
-  font-family: Arial, sans-serif;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.welcome-message {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 20px;
-}
-
-.recent-activity ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-.recent-activity li {
-  padding: 5px 0;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .search-bar {
   display: flex;
   align-items: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .search-input {
   width: 220px;
-  border-radius: 5px;
-  border: 1px solid #dcdfe6;
-  padding: 10px;
-  font-size: 14px;
 }
 
-.search-btn {
+.search-btn,
+.add-btn {
   margin-left: 10px;
-  padding: 10px 20px;
-  font-size: 14px;
-  background-color: #409eff;
-  color: white;
 }
 
-.search-btn:hover {
-  background-color: #66b1ff;
+.table-wrapper {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-.full-width-table th, .full-width-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
+.pagination-wrapper {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
 }
 
-.full-width-table th {
-  background-color: #f2f2f2;
-  font-weight: bold;
+.dialog-form {
+  margin: 0 auto;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+@media (max-width: 768px) {
+  .search-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .search-btn,
+  .add-btn {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 10px;
+  }
+
+  .pagination-wrapper {
+    justify-content: center;
+  }
+
 }
 
 </style>
