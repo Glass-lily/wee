@@ -47,10 +47,10 @@ export default {
           {min: 2, max: 8, message: '长度应该在2-8个字符之间', trigger: 'blur'},
         ],
         goodstype: [
-          {required: true, message: '请选择分类', trigger: 'change'}
+          {required: true, message: '请选择标签', trigger: 'change'}
         ],
         storage: [
-          {required: true, message: '请选择仓库', trigger: 'change'}
+          {required: true, message: '请选择知识大类', trigger: 'change'}
         ],
         count: [
           {required: true, message: '请输入', trigger: 'blur'}
@@ -310,7 +310,7 @@ export default {
 
       <el-select
           v-model="storage"
-          placeholder="请选择仓库">
+          placeholder="请选择知识大类">
         <el-option
             v-for="item in storageData"
             :key="item.id"
@@ -329,7 +329,7 @@ export default {
       </el-select>
       <el-select
           v-model="goodstype"
-          placeholder="请选择分类">
+          placeholder="请选择标签">
         <el-option
             v-for="item in goodstypeData"
             :key="item.id"
@@ -348,8 +348,8 @@ export default {
       <el-button type="primary" @click="loadPost" class="search-btn">查询</el-button>
       <el-button type="primary" @click="resetParam" class="add-btn">重置</el-button>
       <el-button type="success" @click="add" class="add-btn" v-if="user.roleId!=2">新增</el-button>
-      <el-button type="success" @click="inGoods" v-if="user.roleId!=2">入库</el-button>
-      <el-button type="success" @click="outGoods" v-if="user.roleId!=2">出库</el-button>
+      <el-button type="success" @click="inGoods" v-if="user.roleId!=2">增加</el-button>
+      <el-button type="success" @click="outGoods" v-if="user.roleId!=2">减少</el-button>
     </div>
 
     <!-- 表格区域 -->
@@ -365,8 +365,8 @@ export default {
       >
         <el-table-column prop="id" label="ID" width="100" align="center" sortable/>
         <el-table-column prop="name" label="名字" width="200" align="center" sortable/>
-        <el-table-column prop="storage" label="仓库" width="200" align="center" :formatter="formatStorage"/>
-        <el-table-column prop="goodstype" label="分类" width="200" align="center" :formatter="formatGoodstype"/>
+        <el-table-column prop="storage" label="知识大类" width="200" align="center" :formatter="formatStorage"/>
+        <el-table-column prop="goodstype" label="标签" width="200" align="center" :formatter="formatGoodstype"/>
         <el-table-column prop="count" label="数量" width="200" align="center"/>
         <el-table-column prop="remark" label="备注" min-width="200" show-overflow-tooltip/>
         <el-table-column label="操作" width="180" align="center" v-if="user.roleId!=2">
@@ -428,8 +428,8 @@ export default {
         <el-form-item label="名字" prop="name">
           <el-input v-model="form.name" placeholder="请输入"/>
         </el-form-item>
-        <el-form-item label="仓库" prop="storage">
-          <el-select v-model="form.storage" placeholder="请选择仓库">
+        <el-form-item label="知识大类" prop="storage">
+          <el-select v-model="form.storage" placeholder="请选择知识大类">
             <el-option
                 v-for="item in storageData"
                 :key="item.id"
@@ -438,8 +438,8 @@ export default {
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="分类" prop="goodstype">
-          <el-select v-model="form.goodstype" placeholder="请选择分类">
+        <el-form-item label="标签" prop="goodstype">
+          <el-select v-model="form.goodstype" placeholder="请选择标签">
             <el-option
                 v-for="item in goodstypeData"
                 :key="item.id"

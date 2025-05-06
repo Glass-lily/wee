@@ -1,91 +1,184 @@
+<template>
+  <div class="page-container">
+    <!-- 查询区域 -->
+    <el-card class="search-card">
+      <el-form inline>
+        <el-form-item label="名字">
+          <el-input v-model="name" placeholder="请输入名字" clearable></el-input>
+        </el-form-item>
+        <el-form-item label="知识大类">
+          <el-select v-model="storage" placeholder="请选择">
+            <el-option v-for="item in storageData" :key="item.id" :label="item.name" :value="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="标签">
+          <el-select v-model="goodstype" placeholder="请选择">
+            <el-option v-for="item in goodstypeData" :key="item.id" :label="item.name" :value="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="loadPost">查询</el-button>
+          <el-button @click="resetParam">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <!-- 表格区域 -->
+    <el-card class="table-card">
+      <el-button type="success" @click="add">新增知识</el-button>
+      <el-table
+          :data="tableData"
+          border
+          stripe
+          highlight-current-row
+          style="width: 100%; margin-top: 15px"
+          @current-change="selectCurrentChange"
+      >
+        <el-table-column prop="id" label="ID" width="80"></el-table-column>
+        <el-table-column prop="name" label="名字"></el-table-column>
+        <el-table-column prop="content" label="内容"></el-table-column>
+        <el-table-column prop="storagename" label="知识大类" ></el-table-column>
+        <el-table-column prop="goodstypename" label="标签" ></el-table-column>
+        <el-table-column label="操作" width="240">
+          <template #default="scope">
+            <el-button size="small" @click="mod(scope.row)" v-if="user.roleId!=2">编辑</el-button>
+            <el-button size="small" type="danger" @click="del(scope.row.id)" v-if="user.roleId!=2">删除</el-button>
+            <el-button size="small" type="success" @click="see(scope.row.id)">预览</el-button>
+            <el-button size="small" type="primary" @click="exportSingleToExcel(scope.row)">导出Excel</el-button>
+            <el-button size="small" type="warning" @click="exportSingleToPDF(scope.row)">导出PDF</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="pagination-container">
+        <el-pagination
+            background
+            layout="prev, pager, next, jumper"
+            :page-size="pageSize"
+            :total="total"
+            @current-change="handleCurrentChange"
+        />
+      </div>
+    </el-card>
+
+    <!-- 知识弹窗表单 -->
+    <el-dialog v-model="centerDialogVisible" title="知识信息" width="500px">
+      <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+        <el-form-item label="名字" prop="name">
+          <el-input v-model="form.name"></el-input>
+        </el-form-item>
+        <el-form-item label="知识大类" prop="storage">
+          <el-select v-model="form.storage" placeholder="请选择">
+            <el-option v-for="item in storageData" :key="item.id" :label="item.name" :value="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="标签" prop="goodstype">
+          <el-select v-model="form.goodstype" placeholder="请选择">
+            <el-option v-for="item in goodstypeData" :key="item.id" :label="item.name" :value="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="内容" prop="content">
+          <el-input v-model="form.content" type="textarea"></el-input>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="form.remark" type="textarea"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="centerDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="save">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 用户选择弹窗 -->
+    <SelectUserManagePart v-model:visible="innerVisible" @select="doSelectUser" @confirm="confirmUser" />
+  </div>
+</template>
+
 <script>
-import {ElMessage} from "element-plus";
-import {List} from "@element-plus/icons-vue";
-import SelectUserManagePart from "@/components/user/SelectUser.vue";
+import { ElMessage } from "element-plus";
+
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export default {
   name: "HomePage",
-  components: {SelectUserManagePart, List},
+  components: {  },
   data() {
     return {
-      user: JSON.parse(sessionStorage.getItem('CurUser')),
+      user: JSON.parse(sessionStorage.getItem("CurUser")),
       goodstypeData: [],
       storageData: [],
       tableData: [],
       pageSize: 10,
       pageNum: 1,
       total: 0,
-      name: '',
-      storage: '',
-      goodstype: '',
+      name: "",
+      storage: "",
+      goodstype: "",
       centerDialogVisible: false,
       inDialogVisible: false,
       innerVisible: false,
       currentRow: {},
-      tempUser:{},
+      tempUser: {},
       form: {
-        id: '',
-        name: '',
-        storage: '',
-        goodstype: '',
-        count: '',
-        remark: ''
+        id: "",
+        name: "",
+        storage: "",
+        content: "",
+        goodstype: "",
+        storagename:"",
+        goodstypename:"",
+        count: "",
+        remark: ""
       },
       form1: {
-        goods: '',
-        goodsname: '',
-        count: '',
-        userid: '',
-        username: '',
-        admin_id: '',
-        remark: '',
-        action:'1'
+        goods: "",
+        goodsname: "",
+        count: "",
+        userid: "",
+        username: "",
+        admin_id: "",
+        remark: "",
+        action: "1"
       },
       rules: {
         name: [
-          {required: true, message: '请输入姓名', trigger: 'blur'},
-          {min: 2, max: 8, message: '长度应该在2-8个字符之间', trigger: 'blur'},
+          { required: true, message: "请输入姓名", trigger: "blur" },
+          { min: 2, max: 8, message: "长度应该在2-8个字符之间", trigger: "blur" }
         ],
         goodstype: [
-          {required: true, message: '请选择标签', trigger: 'change'}
+          { required: true, message: "请选择标签", trigger: "change" }
         ],
         storage: [
-          {required: true, message: '请选择知识大类', trigger: 'change'}
+          { required: true, message: "请选择知识大类", trigger: "change" }
         ],
-        count: [
-          {required: true, message: '请输入', trigger: 'blur'}
-        ],
+        count: [{ required: true, message: "请输入", trigger: "blur" }]
       },
       rules1: {}
     };
   },
   methods: {
-    doSelectUser(val){
-      //   console.log(val)
-      this.tempUser=val
+    doSelectUser(val) {
+      this.tempUser = val;
     },
-    confirmUser(){
-      this.form1.username=this.tempUser.name
-      this.form1.userid=this.tempUser.id
-
-      this.innerVisible=false
+    confirmUser() {
+      this.form1.username = this.tempUser.name;
+      this.form1.userid = this.tempUser.id;
+      this.innerVisible = false;
     },
     selectCurrentChange(val) {
       this.currentRow = val;
-
     },
-    formatStorage(row) {
-      let temp = this.storageData.find(item => {
-        return item.id == row.storage
-      })
-      return temp && temp.name
-    },
-    formatGoodstype(row) {
-      let temp = this.goodstypeData.find(item => {
-        return item.id == row.goodstype
-      })
-      return temp && temp.name
-    },
+    // formatStorage(row) {
+    //   let temp = this.storageData.find(item => item.id == row.storage);
+    //   return temp && temp.name;
+    // },
+    // formatGoodstype(row) {
+    //   let temp = this.goodstypeData.find(item => item.id == row.goodstype);
+    //   return temp && temp.name;
+    // },
     handleSizeChange(val) {
       this.pageNum = 1;
       this.pageSize = val;
@@ -97,10 +190,14 @@ export default {
     },
     loadPost() {
       this.$http
-          .post(this.$httpUrl + '/text/listPage', {
+          .post(this.$httpUrl + "/text/listPage", {
             pageSize: this.pageSize,
             pageNum: this.pageNum,
-            param: {name: this.name, storage: this.storage + '', goodstype: this.goodstype + ''}
+            param: {
+              name: this.name,
+              storage: this.storage + "",
+              goodstype: this.goodstype + ""
+            }
           })
           .then(res => res.data)
           .then(res => {
@@ -108,7 +205,7 @@ export default {
               this.tableData = res.data;
               this.total = res.total;
             } else {
-              ElMessage.error('获取数据失败');
+              ElMessage.error("获取数据失败");
             }
           });
     },
@@ -119,9 +216,9 @@ export default {
       this.$refs.form1.resetFields();
     },
     resetParam() {
-      this.name = ''
-      this.storage = ''
-      this.goodstype = ''
+      this.name = "";
+      this.storage = "";
+      this.goodstype = "";
     },
     mod(row) {
       this.centerDialogVisible = true;
@@ -136,17 +233,14 @@ export default {
     },
     del(id) {
       this.$http
-          .get(this.$httpUrl + '/goods/del?id=' + id)
+          .get(this.$httpUrl + "/goods/del?id=" + id)
           .then(res => res.data)
           .then(res => {
             if (res.code === 200) {
-              ElMessage({
-                message: '操作成功！',
-                type: 'success'
-              });
+              ElMessage({ message: "操作成功！", type: "success" });
               this.loadPost();
             } else {
-              ElMessage.error('操作失败！');
+              ElMessage.error("操作失败！");
             }
           });
     },
@@ -158,19 +252,16 @@ export default {
     },
     doInGoods() {
       this.$http
-          .post(this.$httpUrl + '/record/save', this.form1)
+          .post(this.$httpUrl + "/record/save", this.form1)
           .then(res => res.data)
           .then(res => {
             if (res.code === 200) {
-              ElMessage({
-                message: '新增成功！',
-                type: 'success'
-              });
+              ElMessage({ message: "新增成功！", type: "success" });
               this.inDialogVisible = false;
               this.loadPost();
-              this.resetInForm()
+              this.resetInForm();
             } else {
-              ElMessage.error('新增失败！');
+              ElMessage.error("新增失败！");
             }
           });
     },
@@ -183,376 +274,138 @@ export default {
             this.doSave();
           }
         } else {
-          console.log('error submit!!');
+          console.log("error submit!!");
           return false;
         }
       });
     },
     doMod() {
       this.$http
-          .post(this.$httpUrl + '/goods/update', this.form)
+          .post(this.$httpUrl + "/goods/update", this.form)
           .then(res => res.data)
           .then(res => {
             if (res.code === 200) {
-              ElMessage({
-                message: '更新成功！',
-                type: 'success'
-              });
+              ElMessage({ message: "更新成功！", type: "success" });
               this.centerDialogVisible = false;
               this.loadPost();
             } else {
-              ElMessage.error('更新失败！');
+              ElMessage.error("更新失败！");
             }
           });
     },
     selectUser() {
-      this.innerVisible = true
+      this.innerVisible = true;
     },
-
     doSave() {
       this.$http
-          .post(this.$httpUrl + '/goods/save', this.form)
+          .post(this.$httpUrl + "/goods/save", this.form)
           .then(res => res.data)
           .then(res => {
             if (res.code === 200) {
-              ElMessage({
-                message: '新增成功！',
-                type: 'success'
-              });
+              ElMessage({ message: "新增成功！", type: "success" });
               this.centerDialogVisible = false;
               this.loadPost();
             } else {
-              ElMessage.error('新增失败！');
+              ElMessage.error("新增失败！");
             }
           });
     },
     loadStorage() {
       this.$http
-          .get(this.$httpUrl + '/storage/list')
+          .get(this.$httpUrl + "/storage/list")
           .then(res => res.data)
           .then(res => {
             if (res.code === 200) {
               this.storageData = res.data;
-
             } else {
-              ElMessage.error('获取数据失败');
+              ElMessage.error("获取数据失败");
             }
           });
     },
     loadGoodstype() {
       this.$http
-          .get(this.$httpUrl + '/goodstype/list')
+          .get(this.$httpUrl + "/goodstype/list")
           .then(res => res.data)
           .then(res => {
             if (res.code === 200) {
               this.goodstypeData = res.data;
-
             } else {
-              ElMessage.error('获取数据失败');
+              ElMessage.error("获取数据失败");
             }
           });
     },
+    exportSingleToExcel(row) {
+      const data = [
+        ["ID", "名字", "内容", "知识大类", "标签", "创建时间", "更新时间"],
+        [
+          row.id,
+          row.name,
+          row.content,
+          row.storagename,
+          row.goodstypename,
+          row.createdAt,
+          row.updatedAt
+        ]
+      ];
+      const worksheet = XLSX.utils.aoa_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "知识详情");
+      XLSX.writeFile(workbook, `${row.name}_知识详情.xlsx`);
+    },
+    exportSingleToPDF(row) {
+      const tempDiv = document.createElement("div");
+      tempDiv.style.padding = "20px";
+      tempDiv.style.background = "#fff";
+      tempDiv.innerHTML = `
+        <h2>知识详情</h2>
+        <p><strong>ID:</strong> ${row.id}</p>
+        <p><strong>名字:</strong> ${row.name}</p>
+        <p><strong>内容:</strong> ${row.content}</p>
+        <p><strong>知识大类:</strong> ${this.formatStorage(row)}</p>
+        <p><strong>标签:</strong> ${this.formatGoodstype(row)}</p>
+        <p><strong>创建时间:</strong> ${row.createdAt}</p>
+        <p><strong>更新时间:</strong> ${row.updatedAt}</p>
+      `;
+      document.body.appendChild(tempDiv);
+
+      html2canvas(tempDiv).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF();
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        pdf.save(`${row.name}_知识详情.pdf`);
+        document.body.removeChild(tempDiv);
+      });
+    }
   },
 
   beforeMount() {
-    this.loadStorage()
-    this.loadGoodstype()
+    this.loadStorage();
+    this.loadGoodstype();
     this.loadPost();
   }
 };
 </script>
 
-<template>
-  <div class="goods-container">
-    <!-- 搜索区域 -->
-    <div class="search-bar">
-      <el-input
-          v-model="name"
-          placeholder="请输入名字"
-          clearable
-          @keyup.enter="loadPost"
-          class="search-input"
-      >
-        <template #suffix>
-          <el-icon>
-            <Search/>
-          </el-icon>
-        </template>
-      </el-input>
-
-      <el-select
-          v-model="storage"
-          placeholder="请选择知识大类">
-        <el-option
-            v-for="item in storageData"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-            clearable
-            @keyup.enter="loadPost"
-
-        >
-          <template #suffix>
-            <el-icon>
-              <List/>
-            </el-icon>
-          </template>
-        </el-option>
-      </el-select>
-      <el-select
-          v-model="goodstype"
-          placeholder="请选择标签">
-        <el-option
-            v-for="item in goodstypeData"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-            clearable
-            @keyup.enter="loadPost"
-        >
-          <template #suffix>
-            <el-icon>
-              <List/>
-            </el-icon>
-          </template>
-        </el-option>
-      </el-select>
-      <el-button type="primary" @click="loadPost" class="search-btn">查询</el-button>
-      <el-button type="primary" @click="resetParam" class="add-btn">重置</el-button>
-      <el-button type="success" @click="add" class="add-btn" v-if="user.roleId!=2">新增</el-button>
-    </div>
-
-    <!-- 表格区域 -->
-    <div class="table-wrapper">
-      <el-table
-          :data="tableData"
-          style="width: 100%"
-          height="500px"
-          stripe
-          border
-          highlight-current-row
-          @current-change="selectCurrentChange"
-      >
-        <el-table-column prop="id" label="ID" width="100" align="center" sortable/>
-        <el-table-column prop="name" label="名字" width="200" align="center" sortable/>
-        <el-table-column prop="content" label="内容" min-width="200" show-overflow-tooltip/>
-        <el-table-column prop="storage" label="知识大类" width="100" align="center" :formatter="formatStorage"/>
-        <el-table-column prop="goodstype" label="标签" width="100" align="center" :formatter="formatGoodstype"/>
-        <el-table-column prop="createdAt" label="创建时间" width="200" align="center" sortable/>
-        <el-table-column prop="updatedAt" label="更新时间" width="200" align="center" sortable/>
-        <el-table-column label="操作" width="180" align="center" v-if="user.roleId!=2">
-          <template #default="scope">
-            <el-button
-                type="primary"
-                size="small"
-                @click="mod(scope.row)"
-            >
-              编辑
-            </el-button>
-            <el-popconfirm
-                title="确定删除这条记录吗？"
-                @confirm="del(scope.row.id)"
-            >
-              <template #reference>
-                <el-button
-                    type="danger"
-                    size="small"
-                >
-                  删除
-                </el-button>
-              </template>
-            </el-popconfirm>
-          </template>
-        </el-table-column>
-      </el-table>
-    </div>
-
-    <!-- 分页区域 -->
-    <div class="pagination-wrapper">
-      <el-pagination
-          v-model:current-page="pageNum"
-          v-model:page-size="pageSize"
-          :page-sizes="[5, 10, 20, 30]"
-          :background="true"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-      />
-    </div>
-
-    <!-- 对话框 -->
-    <el-dialog
-        v-model="centerDialogVisible"
-        title="存储信息"
-        width="500px"
-        center
-        :close-on-click-modal="false"
-    >
-      <el-form
-          ref="form"
-          :rules="rules"
-          :model="form"
-          label-width="80px"
-          class="dialog-form"
-      >
-        <el-form-item label="名字" prop="name">
-          <el-input v-model="form.name" placeholder="请输入"/>
-        </el-form-item>
-        <el-form-item label="知识大类" prop="storage">
-          <el-select v-model="form.storage" placeholder="请选择知识大类">
-            <el-option
-                v-for="item in storageData"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="标签" prop="goodstype">
-          <el-select v-model="form.goodstype" placeholder="请选择标签">
-            <el-option
-                v-for="item in goodstypeData"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
-
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="centerDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="save">确认</el-button>
-        </div>
-      </template>
-    </el-dialog>
-
-    <el-dialog
-        v-model="inDialogVisible"
-        title="存储信息"
-        width="500px"
-        center
-        :close-on-click-modal="false"
-    >
-      <el-dialog
-          v-model="innerVisible"
-          width="700"
-          title="用户选择"
-          append-to-body
-      >
-        <SelectUserManagePart @doSelectUser="doSelectUser"></SelectUserManagePart>
-        <div class="dialog-footer">
-          <el-button @click="innerVisible = false">取消</el-button>
-          <el-button type="primary" @click="confirmUser">确认</el-button>
-        </div>
-      </el-dialog>
-      <el-form
-          ref="form1"
-          :rules="rules1"
-          :model="form1"
-          label-width="80px"
-          class="dialog-form"
-      >
-        <el-form-item label="名字">
-          <el-input v-model="form1.name" readonly/>
-        </el-form-item>
-        <el-form-item label="操作人">
-          <el-input v-model="form1.username" readonly @click="selectUser"/>
-        </el-form-item>
-
-        <el-form-item label="数量" prop="count">
-          <el-input v-model="form1.count" placeholder="请输入"/>
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input
-              v-model="form1.remark"
-              type="textarea"
-              :rows="4"
-              placeholder="请输入备注"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="inDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="doInGoods">确认</el-button>
-        </div>
-      </template>
-    </el-dialog>
-  </div>
-</template>
-
 <style scoped>
-.goods-container {
+.page-container {
   padding: 20px;
-  background-color: #f5f7fa;
-  min-height: 100vh;
-  box-sizing: border-box;
+  background: #f5f7fa;
 }
 
-.search-bar {
-  display: flex;
-  align-items: center;
+.search-card,
+.table-card {
   margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 10px;
 }
 
-.search-input {
-  width: 220px;
+.pagination-container {
+  text-align: right;
+  margin-top: 15px;
 }
 
-.search-btn,
-.add-btn {
-  margin-left: 10px;
+.el-dialog__body {
+  padding: 20px 30px;
 }
-
-.table-wrapper {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.pagination-wrapper {
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.dialog-form {
-  margin: 0 auto;
-}
-
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-@media (max-width: 768px) {
-  .search-bar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .search-input {
-    width: 100%;
-  }
-
-  .search-btn,
-  .add-btn {
-    width: 100%;
-    margin-left: 0;
-    margin-top: 10px;
-  }
-
-  .pagination-wrapper {
-    justify-content: center;
-  }
-
-}
-
 </style>
