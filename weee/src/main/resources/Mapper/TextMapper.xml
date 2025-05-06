@@ -29,6 +29,14 @@
                 LEFT JOIN storage s ON g.storage = s.id
             ${ew.customSqlSegment}
     </select>
+    <!-- 根据ID查详情 -->
+    <select id="getDetailById" parameterType="long" resultType="com.weee.entity.TextRes">
+        SELECT t.*, s.name AS storagename, g.name AS goodstypename
+        FROM text t
+                 LEFT JOIN storage s ON t.id = s.id
+                 LEFT JOIN goodstype g ON t.id = g.id
+        WHERE t.id = #{id}
+    </select>
     <!--查询单个-->
     <select id="queryById" resultMap="TextMap">
         select

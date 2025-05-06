@@ -29,4 +29,9 @@ public class TextServiceImpl extends ServiceImpl<TextMapper, Text> implements Te
         return textMapper.pageS(page, wrapper);
     }
 
+    //  新增：根据ID查询详情
+    @Override
+    public TextRes getDetailById(Long id) {
+        return textMapper.getDetailById(id);
+    }
 }

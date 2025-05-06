@@ -83,5 +83,11 @@ public class TextController {
         return Result.success(list);
     }
 
+    @GetMapping("/detail")
+    public Result detail(@RequestParam Long id) {
+        TextRes textRes = textService.getDetailById(id);
+        return textRes != null ? Result.success(textRes) : Result.fail();
+    }
+
 }
 

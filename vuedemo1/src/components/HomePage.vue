@@ -4,7 +4,7 @@
     <el-card class="search-card">
       <el-form inline>
         <el-form-item label="名字">
-          <el-input v-model="name" placeholder="请输入名字" clearable></el-input>
+          <el-input v-model="name" placeholder="请输入名字" clearable @keyup.enter="loadPost"> </el-input>
         </el-form-item>
         <el-form-item label="知识大类">
           <el-select v-model="storage" placeholder="请选择">
@@ -93,6 +93,23 @@
     <!-- 用户选择弹窗 -->
     <SelectUserManagePart v-model:visible="innerVisible" @select="doSelectUser" @confirm="confirmUser" />
   </div>
+<!--预览弹窗-->
+  <el-dialog v-model="previewDialogVisible" title="知识预览" width="600px">
+    <el-descriptions border column="2">
+      <el-descriptions-item label="ID">{{ previewData.id }}</el-descriptions-item>
+      <el-descriptions-item label="名字">{{ previewData.name }}</el-descriptions-item>
+      <el-descriptions-item label="知识大类">{{ previewData.storagename }}</el-descriptions-item>
+      <el-descriptions-item label="标签">{{ previewData.goodstypename }}</el-descriptions-item>
+      <el-descriptions-item label="内容" :span="2">{{ previewData.content }}</el-descriptions-item>
+      <el-descriptions-item label="备注" :span="2">{{ previewData.remark }}</el-descriptions-item>
+      <el-descriptions-item label="创建时间">{{ previewData.createdAt }}</el-descriptions-item>
+      <el-descriptions-item label="更新时间">{{ previewData.updatedAt }}</el-descriptions-item>
+    </el-descriptions>
+    <template #footer>
+      <el-button @click="previewDialogVisible = false">关闭</el-button>
+    </template>
+  </el-dialog>
+
 </template>
 
 <script>
@@ -117,6 +134,9 @@ export default {
       name: "",
       storage: "",
       goodstype: "",
+      previewDialogVisible: false,
+      previewData: {},
+
       centerDialogVisible: false,
       inDialogVisible: false,
       innerVisible: false,
@@ -160,6 +180,19 @@ export default {
     };
   },
   methods: {
+    see(id) {
+      this.$http.get(this.$httpUrl + "/text/detail?id=" + id)
+          .then(res => res.data)
+          .then(res => {
+            if (res.code === 200) {
+              this.previewData = res.data;
+              this.previewDialogVisible = true;
+            } else {
+              ElMessage.error("获取详情失败");
+            }
+          });
+    },
+
     doSelectUser(val) {
       this.tempUser = val;
     },
@@ -189,16 +222,16 @@ export default {
       this.loadPost();
     },
     loadPost() {
-      this.$http
-          .post(this.$httpUrl + "/text/listPage", {
-            pageSize: this.pageSize,
-            pageNum: this.pageNum,
-            param: {
-              name: this.name,
-              storage: this.storage + "",
-              goodstype: this.goodstype + ""
-            }
-          })
+      this.pageNum = 1;
+      this.$http.post(this.$httpUrl + "/text/listPage", {
+        pageSize: this.pageSize,
+        pageNum: this.pageNum,
+        param: {
+          name: this.name,
+          storage: this.storage + "",
+          goodstype: this.goodstype + ""
+        }
+      })
           .then(res => res.data)
           .then(res => {
             if (res.code === 200) {
@@ -209,6 +242,7 @@ export default {
             }
           });
     },
+
     resetForm() {
       this.$refs.form.resetFields();
     },
@@ -219,7 +253,10 @@ export default {
       this.name = "";
       this.storage = "";
       this.goodstype = "";
+      this.pageNum = 1;
+      this.loadPost();
     },
+
     mod(row) {
       this.centerDialogVisible = true;
       this.$nextTick(() => {
