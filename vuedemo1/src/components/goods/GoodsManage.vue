@@ -363,7 +363,7 @@ export default {
           highlight-current-row
           @current-change="selectCurrentChange"
       >
-        <el-table-column prop="id" label="ID" width="100" align="center" sortable/>
+     <!--   <el-table-column prop="id" label="ID" width="100" align="center" sortable/>-->
         <el-table-column prop="name" label="名字" width="200" align="center" sortable/>
         <el-table-column prop="storage" label="知识大类" width="200" align="center" :formatter="formatStorage"/>
         <el-table-column prop="goodstype" label="标签" width="200" align="center" :formatter="formatGoodstype"/>

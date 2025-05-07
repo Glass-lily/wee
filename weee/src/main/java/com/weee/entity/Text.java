@@ -1,5 +1,8 @@
 package com.weee.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+
 import java.sql.Timestamp;
 import java.io.Serializable;
 
@@ -10,7 +13,7 @@ import java.io.Serializable;
  * @since 2025-04-27 17:20:56
  */
 public class Text implements Serializable {
-
+    @TableId(type = IdType.AUTO)
     private Integer id;
 
     private String name;

@@ -8,7 +8,6 @@
         <result property="content" column="content" jdbcType="VARCHAR"/>
         <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
         <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
-
     </resultMap>
 
     <!-- TextRes实体类的ResultMap -->
@@ -16,6 +15,7 @@
         <result property="storagename" column="storagename" jdbcType="VARCHAR"/>
         <result property="goodstypename" column="goodstypename" jdbcType="VARCHAR"/>
     </resultMap>
+
     <!-- 分页查询 -->
     <select id="pageS" resultMap="TextResMap">
         SELECT
@@ -29,6 +29,7 @@
                 LEFT JOIN storage s ON g.storage = s.id
             ${ew.customSqlSegment}
     </select>
+
     <!-- 根据ID查详情 -->
     <select id="getDetailById" parameterType="long" resultType="com.weee.entity.TextRes">
         SELECT t.*, s.name AS storagename, g.name AS goodstypename
@@ -37,18 +38,17 @@
                  LEFT JOIN goodstype g ON t.id = g.id
         WHERE t.id = #{id}
     </select>
-    <!--查询单个-->
+
+    <!-- 查询单个 -->
     <select id="queryById" resultMap="TextMap">
-        select
-id, name, content, created_at, updated_at
+        select id, name, content, created_at, updated_at
         from text
         where id = #{id}
     </select>
 
-    <!--查询指定行数据-->
+    <!-- 查询指定行数据 -->
     <select id="queryAllByLimit" resultMap="TextMap">
-        select
-id, name, content, created_at, updated_at
+        select id, name, content, created_at, updated_at
         from text
         <where>
             <if test="id != null">
@@ -70,7 +70,7 @@ id, name, content, created_at, updated_at
         limit #{pageable.offset}, #{pageable.pageSize}
     </select>
 
-    <!--统计总行数-->
+    <!-- 统计总行数 -->
     <select id="count" resultType="java.lang.Long">
         select count(1)
         from text
@@ -93,7 +93,7 @@ id, name, content, created_at, updated_at
         </where>
     </select>
 
-    <!--新增所有列-->
+    <!-- 新增所有列 -->
     <insert id="insert" keyProperty="id" useGeneratedKeys="true">
         insert into text(name, content, created_at, updated_at)
         values (#{name}, #{content}, #{createdAt}, #{updatedAt})
@@ -103,7 +103,7 @@ id, name, content, created_at, updated_at
         insert into text(name, content, created_at, updated_at)
         values
         <foreach collection="entities" item="entity" separator=",">
-        (#{entity.name}, #{entity.content}, #{entity.createdAt}, #{entity.updatedAt})
+            (#{entity.name}, #{entity.content}, #{entity.createdAt}, #{entity.updatedAt})
         </foreach>
     </insert>
 
@@ -114,13 +114,13 @@ id, name, content, created_at, updated_at
             (#{entity.name}, #{entity.content}, #{entity.createdAt}, #{entity.updatedAt})
         </foreach>
         on duplicate key update
-name = values(name),
-content = values(content),
-created_at = values(created_at),
-updated_at = values(updated_at)
+        name = values(name),
+        content = values(content),
+        created_at = values(created_at),
+        updated_at = values(updated_at)
     </insert>
 
-    <!--通过主键修改数据-->
+    <!-- 通过主键修改数据 -->
     <update id="update">
         update text
         <set>
@@ -140,10 +140,8 @@ updated_at = values(updated_at)
         where id = #{id}
     </update>
 
-    <!--通过主键删除-->
+    <!-- 通过主键删除 -->
     <delete id="deleteById">
         delete from text where id = #{id}
     </delete>
-
 </mapper>
-

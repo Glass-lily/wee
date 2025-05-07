@@ -1,15 +1,14 @@
 package com.weee.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.weee.common.QueryPageParam;
 import com.weee.common.Result;
-import com.weee.entity.Menu;
+import com.weee.entity.*;
 import com.weee.entity.Text;
-import com.weee.entity.Text;
-import com.weee.entity.TextRes;
 import com.weee.service.TextService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
@@ -44,10 +43,10 @@ public class TextController {
     //新增
     @PostMapping("/save")
     public Result save(@RequestBody Text text) {
-        int num  = Optional.ofNullable(textService.list().size()).orElse(1);
-        text.setId(num+2);
+        // 不手动设置 id，让数据库自动生成
         return textService.save(text) ? Result.success() : Result.fail();
     }
+
 
     //更新
     @PostMapping("/update")
@@ -55,28 +54,70 @@ public class TextController {
         return textService.updateById(text) ? Result.success() : Result.fail();
     }
 
-    @PostMapping("/listPage")
-    public Result listPage(@RequestBody QueryPageParam query) {
-        HashMap param = query.getParam();
-        String name = (String) param.get("name");
+//    @PostMapping("/listPage")
+//    public Result listPage(@RequestBody QueryPageParam query) {
+//        HashMap param = query.getParam();
+//        String name = (String) param.get("name");
+//      //  String storage = param.get("storage").toString();
+//      //  String goodstype = param.get("goodstype").toString();
+//        String content = param.get("content")== null ? null : param.get("content").toString();
+//
+//
+//
+//        Page<Text> page = new Page<>();
+//        page.setCurrent(query.getPageNum());
+//        page.setSize(query.getPageSize());
+//
+//        LambdaQueryWrapper<Text> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+//        if (StringUtils.isNotBlank(name) && !"null".equals(name)) {
+//            lambdaQueryWrapper.like(Text::getName, name);
+//        }
+//        if (StringUtils.isNotBlank(content) && !"null".equals(content)) {
+//            lambdaQueryWrapper.like(Text::getContent, content);
+//        }
+////        if (StringUtils.isNotBlank(storage) && !"null".equals(storage)) {
+////            lambdaQueryWrapper.eq(Text::getStorage, storage);
+////        }
+////        if (StringUtils.isNotBlank(goodstype) && !"null".equals(goodstype)) {
+////            lambdaQueryWrapper.eq(Text::getGoodstype, goodstype);
+////        }
+//
+//
+//        IPage<TextRes> result = textService.pageS(page, lambdaQueryWrapper);
+//
+//
+//        return Result.success(result.getRecords(), result.getTotal());
+//    }
+@PostMapping("/listPage")
+public Result listPage(@RequestBody QueryPageParam query) {
+    HashMap param = query.getParam();
+    String name = (String) param.get("name");
+    String content = param.get("content") == null ? null : param.get("content").toString();
+    String storage = param.get("storage") == null ? null : param.get("storage").toString();
+    String goodstype = param.get("goodstype") == null ? null : param.get("goodstype").toString();
 
+    Page<Text> page = new Page<>();
+    page.setCurrent(query.getPageNum());
+    page.setSize(query.getPageSize());
 
-        Page<Text> page = new Page<>();
-        page.setCurrent(query.getPageNum());
-        page.setSize(query.getPageSize());
-
-        LambdaQueryWrapper<Text> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        if (StringUtils.isNotBlank(name) && !"null".equals(name)) {
-            lambdaQueryWrapper.like(Text::getName, name);
-        }
-
-
-        IPage<TextRes> result = textService.pageS(page, lambdaQueryWrapper);
-
-
-        return Result.success(result.getRecords(), result.getTotal());
+    QueryWrapper<Text> queryWrapper = new QueryWrapper<>();
+    if (StringUtils.isNotBlank(name) && !"null".equals(name)) {
+        queryWrapper.like("t.name", name); // 明确指定 text 表的 name
+    }
+    if (StringUtils.isNotBlank(content) && !"null".equals(content)) {
+        queryWrapper.like("t.content", content); // 明确指定 text 表的 content
+    }
+    if (StringUtils.isNotBlank(storage) && !"null".equals(storage)) {
+        queryWrapper.eq("s.id", storage); // storage 表的 id
+    }
+    if (StringUtils.isNotBlank(goodstype) && !"null".equals(goodstype)) {
+        queryWrapper.eq("gt.id", goodstype); // goodstype 表的 id
     }
 
+    IPage<TextRes> result = textService.pageS(page, queryWrapper);
+
+    return Result.success(result.getRecords(), result.getTotal());
+}
     @GetMapping("/list")
     public Result list() {
         List list= textService.list();
