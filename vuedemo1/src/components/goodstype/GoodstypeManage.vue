@@ -170,8 +170,8 @@ export default {
         <el-table-column prop="id" label="ID" width="100" align="center" sortable />
         <el-table-column prop="name" label="名字" width="200" align="center" sortable />
         <el-table-column prop="remark" label="备注" min-width="200" show-overflow-tooltip />
-        <el-table-column label="操作" width="180" align="center">
-          <template #default="scope">
+        <el-table-column label="操作" width="180" align="center" >
+          <template #default="scope" >
             <el-button
                 type="primary"
                 size="small"

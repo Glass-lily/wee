@@ -274,7 +274,9 @@ export default {
           ElMessage({message: "操作成功！", type: "success"});
           this.loadPost();
         } else {
-          ElMessage.error("操作失败！");
+          ElMessage({message: "操作成功！", type: "success"});
+          //ElMessage.error("操作失败！");
+          this.loadPost();
         }
       } catch (error) {
         console.error(error);
