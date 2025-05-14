@@ -53,7 +53,7 @@ public class UserController {
 
     @PostMapping("/update")
     public Result update(@RequestBody User user) {
-        System.out.println("Received /user/update request: " + user);
+
         // 校验输入
         if (user.getId() == 0) {
             Result result = Result.fail();
@@ -80,15 +80,21 @@ public class UserController {
             result.setMsg("密码长度应为6到20个字符");
             return result;
         }
+        // 校验isValid字段，只能是 'Y' 或 'N'
+        if (user.getIsValid() != null && !user.getIsValid().matches("^[YN]$")) {
+            Result result = Result.fail();
+            result.setMsg("isValid字段只允许 'Y' 或 'N'");
+            return result;
+        }
 
-        // 校验用户是否存在且有效
+        // 校验用户是否存在
         User existingUser = userService.lambdaQuery()
-                .eq(User::getId, user.getId())
-                .eq(User::getIsValid, "Y")
+                .eq(User::getId, user.getId()) // 查找用户，不考虑有效性
                 .one();
+
         if (existingUser == null) {
             Result result = Result.fail();
-            result.setMsg("用户不存在或已失效");
+            result.setMsg("用户不存在");
             return result;
         }
 
@@ -98,6 +104,11 @@ public class UserController {
         existingUser.setSex(user.getSex() != null ? user.getSex() : existingUser.getSex());
         if (user.getPassword() != null) {
             existingUser.setPassword(user.getPassword()); // 假设密码明文存储，生产环境应加密
+        }
+
+        // 更新isValid字段
+        if (user.getIsValid() != null) {
+            existingUser.setIsValid(user.getIsValid()); // 更新 isValid 字段
         }
 
         // 执行更新
@@ -110,6 +121,8 @@ public class UserController {
             return result;
         }
     }
+
+
 
     //登录
     @PostMapping("/login")

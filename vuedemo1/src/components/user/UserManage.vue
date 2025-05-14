@@ -38,19 +38,20 @@ export default {
       sex: '',
       roleId: '',
       sexs: [
-        { label: '男', value: 'M' },
-        { label: '女', value: 'F' },
+        { label: '男', value: '1' },
+        { label: '女', value: '0' },
       ],
       centerDialogVisible: false,
       form: {
         id: '',
         no: '',
         name: '',
-        sex: 'M',
+        sex: '1',
         age: '',
         password: '',
         roleId: '2',
         phone: '',
+        isValid: 'Y',  // 默认状态为有效
       },
       rules: {
         no: [
@@ -137,6 +138,7 @@ export default {
         this.form.age = row.age;
         this.form.roleId = row.roleId + '';
         this.form.phone = row.phone;
+        this.form.isValid=row.isValid;
       });
     },
     del(id) {
@@ -268,11 +270,11 @@ export default {
         <el-table-column prop="sex" label="性别" width="100" align="center">
           <template #default="scope">
             <el-tag
-                :type="scope.row.sex === 'M' ? 'primary' : 'danger'"
+                :type="scope.row.sex === '1' ? 'primary' : 'danger'"
                 size="small"
                 effect="light"
             >
-              {{ scope.row.sex === 'M' ? '男' : '女' }}
+              {{ scope.row.sex === '1' ? '男' : '女' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -367,8 +369,8 @@ export default {
         </el-form-item>
         <el-form-item label="性别" prop="sex">
           <el-radio-group v-model="form.sex">
-            <el-radio value="M">男</el-radio>
-            <el-radio value="F">女</el-radio>
+            <el-radio value="1">男</el-radio>
+            <el-radio value="0">女</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="身份" prop="roleId">
@@ -386,6 +388,9 @@ export default {
         </el-form-item>
         <el-form-item label="手机号" prop="phone">
           <el-input v-model="form.phone" placeholder="请输入手机号" />
+        </el-form-item>
+        <el-form-item label="是否有效" prop="isValid">
+          <el-switch v-model="form.isValid" :active-value="'Y'" :inactive-value="'N'"></el-switch>
         </el-form-item>
       </el-form>
       <template #footer>
