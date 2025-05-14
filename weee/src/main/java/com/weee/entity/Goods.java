@@ -27,7 +27,7 @@ public class Goods implements Serializable {
      */
     private Integer goodstype;
 /**
-     * 数量
+     * 审核状态 (0: 未审核, 1: 通过, 2: 未通过)
      */
     private Integer count;
 /**

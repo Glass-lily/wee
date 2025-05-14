@@ -1,11 +1,9 @@
 <script>
 import {ElMessage} from "element-plus";
-import {List} from "@element-plus/icons-vue";
-import SelectUserManagePart from "@/components/user/SelectUser.vue";
 
 export default {
   name: "GoodsManagePart",
-  components: {SelectUserManagePart, List},
+  components: { },
   data() {
     return {
       user: JSON.parse(sessionStorage.getItem('CurUser')),
@@ -16,6 +14,7 @@ export default {
       pageNum: 1,
       total: 0,
       name: '',
+      count:'',
       storage: '',
       goodstype: '',
       centerDialogVisible: false,
@@ -60,19 +59,69 @@ export default {
     };
   },
   methods: {
+    // 选择当前行
+    selectCurrentChange(val) {
+      this.currentRow = val;
+    },
+
+    // 通过按钮的操作，点击后 count 改为 1
+    GoodsTongguo() {
+      if (!this.currentRow.id) {
+        ElMessage.warning('请先点击选择记录');
+        return;
+      }
+
+      this.setAuditStatus(this.currentRow.id, 1);  // 设置为通过状态
+    },
+
+    // 不通过按钮的操作，点击后 count 改为 2
+    GoodsButongguo() {
+      if (!this.currentRow.id) {
+        ElMessage.warning('请先点击选择记录');
+        return;
+      }
+
+      this.setAuditStatus(this.currentRow.id, 2);  // 设置为未通过状态
+
+    },
+    // 设置知识的审核状态
+    setAuditStatus(id, count) {
+      // 查找当前选中的知识
+
+      const item = this.tableData.find(good => good.id === id);
+
+      if (item) {
+        item.count = count; // 更新知识的审核状态
+
+        // 发送请求更新后端数据库
+        this.$http
+            .post(this.$httpUrl + '/goods/updateAuditStatus', {
+              id: item.id,
+              count: item.count
+            }, {
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'  // 明确设置请求头
+              }})
+            .then(response => {
+              if (response.data.success) {
+                ElMessage.success('状态更新成功');
+                this.loadPost();  // 刷新数据
+              } else {
+                ElMessage.success('状态更新成功');
+               // ElMessage.error('状态更新失败');
+              }
+            })
+            .catch(() => {
+              ElMessage.error('请求失败');
+            });
+      } else {
+        ElMessage.warning('未找到该知识');
+      }
+    },
+
     doSelectUser(val){
    //   console.log(val)
       this.tempUser=val
-    },
-    confirmUser(){
-      this.form1.username=this.tempUser.name
-      this.form1.userid=this.tempUser.id
-
-      this.innerVisible=false
-    },
-    selectCurrentChange(val) {
-      this.currentRow = val;
-
     },
     formatStorage(row) {
       let temp = this.storageData.find(item => {
@@ -156,52 +205,6 @@ export default {
         this.resetForm();
       });
     },
-    inGoods() {
-      if (!this.currentRow.id) {
-        alert("请选择记录!");
-        return;
-      }
-      this.inDialogVisible = true;
-      this.$nextTick(() => {
-        this.resetInForm();
-      })
-      this.form1.name = this.currentRow.name
-      this.form1.goods = this.currentRow.id
-      this.form1.adminId = this.user.id
-      this.form1.action='1'
-    },
-    outGoods(){
-      if (!this.currentRow.id) {
-        alert("请选择记录!");
-        return;
-      }
-      this.inDialogVisible = true;
-      this.$nextTick(() => {
-        this.resetInForm();
-      })
-      this.form1.name = this.currentRow.name
-      this.form1.goods = this.currentRow.id
-      this.form1.adminId = this.user.id
-      this.form1.action='2'
-    },
-    doInGoods() {
-      this.$http
-          .post(this.$httpUrl + '/record/save', this.form1)
-          .then(res => res.data)
-          .then(res => {
-            if (res.code === 200) {
-              ElMessage({
-                message: '新增成功！',
-                type: 'success'
-              });
-              this.inDialogVisible = false;
-              this.loadPost();
-              this.resetInForm()
-            } else {
-              ElMessage.error('新增失败！');
-            }
-          });
-    },
     save() {
       this.$refs.form.validate(valid => {
         if (valid) {
@@ -233,10 +236,6 @@ export default {
             }
           });
     },
-    selectUser() {
-      this.innerVisible = true
-    },
-
     doSave() {
       this.$http
           .post(this.$httpUrl + '/goods/save', this.form)
@@ -289,106 +288,85 @@ export default {
   }
 };
 </script>
-
 <template>
   <div class="goods-container">
     <!-- 搜索区域 -->
     <div class="search-bar">
       <el-input
           v-model="name"
-          placeholder="请输入名字"
+          placeholder="请输入知识名称"
           clearable
           @keyup.enter="loadPost"
           class="search-input"
       >
         <template #suffix>
           <el-icon>
-            <Search/>
+            <Search />
           </el-icon>
         </template>
       </el-input>
 
-      <el-select
-          v-model="storage"
-          placeholder="请选择知识大类">
+      <el-select v-model="storage" placeholder="请选择知识大类" class="select-input">
         <el-option
             v-for="item in storageData"
             :key="item.id"
             :label="item.name"
             :value="item.id"
             clearable
-            @keyup.enter="loadPost"
-
-        >
-          <template #suffix>
-            <el-icon>
-              <List/>
-            </el-icon>
-          </template>
-        </el-option>
+        />
       </el-select>
-      <el-select
-          v-model="goodstype"
-          placeholder="请选择标签">
+
+      <el-select v-model="goodstype" placeholder="请选择标签" class="select-input">
         <el-option
             v-for="item in goodstypeData"
             :key="item.id"
             :label="item.name"
             :value="item.id"
             clearable
-            @keyup.enter="loadPost"
-        >
-          <template #suffix>
-            <el-icon>
-              <List/>
-            </el-icon>
-          </template>
-        </el-option>
+        />
       </el-select>
+
       <el-button type="primary" @click="loadPost" class="search-btn">查询</el-button>
-      <el-button type="primary" @click="resetParam" class="add-btn">重置</el-button>
-      <el-button type="success" @click="add" class="add-btn" v-if="user.roleId!=2">新增</el-button>
-      <el-button type="success" @click="inGoods" v-if="user.roleId!=2">增加</el-button>
-      <el-button type="success" @click="outGoods" v-if="user.roleId!=2">减少</el-button>
+      <el-button type="default" @click="resetParam" class="reset-btn">重置</el-button>
+      <el-button type="success" @click="add" class="add-btn" v-if="user.roleId != 2">新增</el-button>
+      <el-button type="success" @click="GoodsTongguo" class="pass-btn" v-if="user.roleId != 2">通过</el-button>
+      <el-button type="danger" @click="GoodsButongguo" class="reject-btn" v-if="user.roleId != 2">不通过</el-button>
     </div>
 
     <!-- 表格区域 -->
     <div class="table-wrapper">
       <el-table
           :data="tableData"
-          style="width: 100%"
-          height="500px"
           stripe
           border
           highlight-current-row
           @current-change="selectCurrentChange"
+          class="goods-table"
       >
-     <!--   <el-table-column prop="id" label="ID" width="100" align="center" sortable/>-->
-        <el-table-column prop="name" label="名字" width="200" align="center" sortable/>
-        <el-table-column prop="storage" label="知识大类" width="200" align="center" :formatter="formatStorage"/>
-        <el-table-column prop="goodstype" label="标签" width="200" align="center" :formatter="formatGoodstype"/>
-        <el-table-column prop="count" label="数量" width="200" align="center"/>
-        <el-table-column prop="remark" label="备注" min-width="200" show-overflow-tooltip/>
-        <el-table-column label="操作" width="180" align="center" v-if="user.roleId!=2">
+        <el-table-column prop="name" label="名字" width="200" align="center" sortable />
+        <el-table-column prop="storage" label="知识大类" width="200" align="center" :formatter="formatStorage" />
+        <el-table-column prop="goodstype" label="标签" width="200" align="center" :formatter="formatGoodstype" />
+        <el-table-column prop="count" label="状态" width="140" align="center">
           <template #default="scope">
-            <el-button
-                type="primary"
+            <el-tag
+                :type="scope.row.count === 0 ? 'info' : scope.row.count === 1 ? 'success' : 'danger'"
                 size="small"
-                @click="mod(scope.row)"
+                effect="light"
             >
-              编辑
-            </el-button>
+              {{ scope.row.count === 0 ? '未审核' : scope.row.count === 1 ? '通过' : '未通过' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="remark" label="备注" min-width="200" show-overflow-tooltip />
+        <el-table-column label="操作" width="180" align="center" v-if="user.roleId != 2">
+          <template #default="scope">
+            <el-button type="primary" size="small" @click="mod(scope.row)">编辑</el-button>
             <el-popconfirm
                 title="确定删除这条记录吗？"
                 @confirm="del(scope.row.id)"
             >
               <template #reference>
-                <el-button
-                    type="danger"
-                    size="small"
-                >
-                  删除
-                </el-button>
+                <el-button type="danger" size="small">删除</el-button>
               </template>
             </el-popconfirm>
           </template>
@@ -407,6 +385,7 @@ export default {
           :total="total"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
+          class="pagination"
       />
     </div>
 
@@ -418,105 +397,31 @@ export default {
         center
         :close-on-click-modal="false"
     >
-      <el-form
-          ref="form"
-          :rules="rules"
-          :model="form"
-          label-width="80px"
-          class="dialog-form"
-      >
+      <el-form ref="form" :rules="rules" :model="form" label-width="80px" class="dialog-form">
         <el-form-item label="名字" prop="name">
-          <el-input v-model="form.name" placeholder="请输入"/>
+          <el-input v-model="form.name" placeholder="请输入" />
         </el-form-item>
         <el-form-item label="知识大类" prop="storage">
           <el-select v-model="form.storage" placeholder="请选择知识大类">
-            <el-option
-                v-for="item in storageData"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
-            />
+            <el-option v-for="item in storageData" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="标签" prop="goodstype">
           <el-select v-model="form.goodstype" placeholder="请选择标签">
-            <el-option
-                v-for="item in goodstypeData"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
-            />
+            <el-option v-for="item in goodstypeData" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="数量" prop="count">
-          <el-input v-model="form.count" placeholder="请输入"/>
+        <el-form-item label="状态" prop="count">
+          <el-input v-model="form.count" placeholder="请输入" />
         </el-form-item>
         <el-form-item label="备注" prop="remark">
-          <el-input
-              v-model="form.remark"
-              type="textarea"
-              :rows="4"
-              placeholder="请输入备注"
-          />
+          <el-input v-model="form.remark" type="textarea" :rows="4" placeholder="请输入备注" />
         </el-form-item>
       </el-form>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="centerDialogVisible = false">取消</el-button>
           <el-button type="primary" @click="save">确认</el-button>
-        </div>
-      </template>
-    </el-dialog>
-
-    <el-dialog
-        v-model="inDialogVisible"
-        title="存储信息"
-        width="500px"
-        center
-        :close-on-click-modal="false"
-    >
-      <el-dialog
-          v-model="innerVisible"
-          width="700"
-          title="用户选择"
-          append-to-body
-      >
-        <SelectUserManagePart @doSelectUser="doSelectUser"></SelectUserManagePart>
-        <div class="dialog-footer">
-          <el-button @click="innerVisible = false">取消</el-button>
-          <el-button type="primary" @click="confirmUser">确认</el-button>
-        </div>
-      </el-dialog>
-      <el-form
-          ref="form1"
-          :rules="rules1"
-          :model="form1"
-          label-width="80px"
-          class="dialog-form"
-      >
-        <el-form-item label="名字">
-          <el-input v-model="form1.name" readonly/>
-        </el-form-item>
-        <el-form-item label="操作人">
-          <el-input v-model="form1.username" readonly @click="selectUser"/>
-        </el-form-item>
-
-        <el-form-item label="数量" prop="count">
-          <el-input v-model="form1.count" placeholder="请输入"/>
-        </el-form-item>
-        <el-form-item label="备注" prop="remark">
-          <el-input
-              v-model="form1.remark"
-              type="textarea"
-              :rows="4"
-              placeholder="请输入备注"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <div class="dialog-footer">
-          <el-button @click="inDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="doInGoods">确认</el-button>
         </div>
       </template>
     </el-dialog>
@@ -539,12 +444,16 @@ export default {
   gap: 10px;
 }
 
-.search-input {
+.search-input,
+.select-input {
   width: 220px;
 }
 
 .search-btn,
-.add-btn {
+.reset-btn,
+.add-btn,
+.pass-btn,
+.reject-btn {
   margin-left: 10px;
 }
 
@@ -553,10 +462,21 @@ export default {
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.goods-table {
+  width: 100%;
+  padding: 10px;
 }
 
 .pagination-wrapper {
   margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pagination {
   display: flex;
   justify-content: flex-end;
 }
@@ -571,18 +491,41 @@ export default {
   gap: 10px;
 }
 
+.el-button--primary {
+  background-color: #409eff;
+  border-color: #409eff;
+}
+
+.el-button--default {
+  background-color: #f4f6f9;
+  border-color: #dcdfe6;
+}
+
+.el-button--success {
+  background-color: #67c23a;
+  border-color: #67c23a;
+}
+
+.el-button--danger {
+  background-color: #f56c6c;
+  border-color: #f56c6c;
+}
+
 @media (max-width: 768px) {
   .search-bar {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .search-input {
+  .search-input,
+  .select-input {
     width: 100%;
   }
 
   .search-btn,
-  .add-btn {
+  .add-btn,
+  .pass-btn,
+  .reject-btn {
     width: 100%;
     margin-left: 0;
     margin-top: 10px;
@@ -591,7 +534,5 @@ export default {
   .pagination-wrapper {
     justify-content: center;
   }
-
 }
-
 </style>

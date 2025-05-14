@@ -10,6 +10,7 @@ import com.weee.entity.Goods;
 import com.weee.entity.Text;
 import com.weee.service.GoodsService;
 import com.weee.service.TextService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -24,12 +25,12 @@ import java.util.HashMap;
  * @since 2025-04-14 12:20:47
  */
 @RestController
-@RequestMapping("goods")
+@RequestMapping("/goods")
 public class GoodsController {
     /**
      * 服务对象
      */
-    @Resource
+    @Autowired
     private GoodsService goodsService;
 
     @Resource
@@ -46,7 +47,7 @@ public class GoodsController {
         try {
             goods.setId(null); // 确保 ID 为空，防止覆盖现有记录
             if (goods.getCount() == null) {
-                goods.setCount(1); // 设置默认值
+                goods.setCount(0); // 设置默认值
             }
             boolean goodsSaved = goodsService.save(goods);
             if (!goodsSaved) {
@@ -97,4 +98,19 @@ public class GoodsController {
         IPage<Goods> result = goodsService.page(page, lambdaQueryWrapper);
         return Result.success(result.getRecords(), result.getTotal());
     }
+
+    @PostMapping("/updateAuditStatus")
+    public Result updateAuditStatus(@RequestParam Integer id, @RequestParam Integer count) {
+        try {
+            boolean isUpdated = goodsService.updateAuditStatus(id, count);  // 更新商品的审核状态
+            if (isUpdated) {
+                return Result.success("状态更新成功");
+            } else {
+                return Result.fail();
+            }
+        } catch (Exception e) {
+            return Result.fail();
+        }
+    }
+
 }

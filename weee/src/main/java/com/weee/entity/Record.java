@@ -30,7 +30,7 @@ public class Record implements Serializable {
      */
     private Integer adminId;
 /**
-     * 数量
+     * 状态
      */
     private Integer count;
 /**

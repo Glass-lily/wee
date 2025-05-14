@@ -14,20 +14,23 @@
     <resultMap type="com.weee.entity.TextRes" id="TextResMap" extends="TextMap">
         <result property="storagename" column="storagename" jdbcType="VARCHAR"/>
         <result property="goodstypename" column="goodstypename" jdbcType="VARCHAR"/>
+        <result property="count" column="count" jdbcType="INTEGER"/>
     </resultMap>
 
     <!-- 分页查询 -->
     <select id="pageS" resultMap="TextResMap">
         SELECT
-            t.*,
-            s.name AS storagename,
-            gt.name AS goodstypename
+        t.*,
+        g.`count` AS count,               <!-- 使用反引号避免与 MySQL 保留字冲突 -->
+        s.name AS storagename,
+        gt.name AS goodstypename
         FROM
-            text t
-                LEFT JOIN goods g ON t.name = g.name
-                LEFT JOIN goodstype gt ON g.goodstype = gt.id
-                LEFT JOIN storage s ON g.storage = s.id
-            ${ew.customSqlSegment}
+        text t
+        LEFT JOIN goods g ON t.name = g.name
+        LEFT JOIN goodstype gt ON g.goodstype = gt.id
+        LEFT JOIN storage s ON g.storage = s.id
+
+        ${ew.customSqlSegment}<!-- 动态 SQL -->
     </select>
 
     <!-- 根据ID查详情 -->
@@ -144,4 +147,5 @@
     <delete id="deleteById">
         delete from text where id = #{id}
     </delete>
+
 </mapper>

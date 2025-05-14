@@ -61,7 +61,7 @@ const routes=[
                 path:'/Goods',
                 name:'goods',
                 meta:{
-                    title:'知识'
+                    title:'知识审核'
 
                 },
                 component:()=>import('@/components/goods/GoodsManage.vue')

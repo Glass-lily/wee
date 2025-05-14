@@ -25,7 +25,6 @@ public class TextServiceImpl extends ServiceImpl<TextMapper, Text> implements Te
 
     @Override
     public IPage<TextRes> pageS(Page<Text> page, Wrapper<Text> wrapper) {
-       // return textMapper.selectPage(page, wrapper);
         return textMapper.pageS(page, wrapper);
     }
 

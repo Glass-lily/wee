@@ -54,73 +54,44 @@ public class TextController {
         return textService.updateById(text) ? Result.success() : Result.fail();
     }
 
-//    @PostMapping("/listPage")
-//    public Result listPage(@RequestBody QueryPageParam query) {
-//        HashMap param = query.getParam();
-//        String name = (String) param.get("name");
-//      //  String storage = param.get("storage").toString();
-//      //  String goodstype = param.get("goodstype").toString();
-//        String content = param.get("content")== null ? null : param.get("content").toString();
-//
-//
-//
-//        Page<Text> page = new Page<>();
-//        page.setCurrent(query.getPageNum());
-//        page.setSize(query.getPageSize());
-//
-//        LambdaQueryWrapper<Text> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-//        if (StringUtils.isNotBlank(name) && !"null".equals(name)) {
-//            lambdaQueryWrapper.like(Text::getName, name);
-//        }
-//        if (StringUtils.isNotBlank(content) && !"null".equals(content)) {
-//            lambdaQueryWrapper.like(Text::getContent, content);
-//        }
-////        if (StringUtils.isNotBlank(storage) && !"null".equals(storage)) {
-////            lambdaQueryWrapper.eq(Text::getStorage, storage);
-////        }
-////        if (StringUtils.isNotBlank(goodstype) && !"null".equals(goodstype)) {
-////            lambdaQueryWrapper.eq(Text::getGoodstype, goodstype);
-////        }
-//
-//
-//        IPage<TextRes> result = textService.pageS(page, lambdaQueryWrapper);
-//
-//
-//        return Result.success(result.getRecords(), result.getTotal());
-//    }
-@PostMapping("/listPage")
-public Result listPage(@RequestBody QueryPageParam query) {
-    HashMap param = query.getParam();
-    String name = (String) param.get("name");
-    String content = param.get("content") == null ? null : param.get("content").toString();
-    String storage = param.get("storage") == null ? null : param.get("storage").toString();
-    String goodstype = param.get("goodstype") == null ? null : param.get("goodstype").toString();
+    @PostMapping("/listPage")
+    public Result listPage(@RequestBody QueryPageParam query) {
+        HashMap param = query.getParam();
+        String name = (String) param.get("name");
+        String content = param.get("content") == null ? null : param.get("content").toString();
+        String storage = param.get("storage") == null ? null : param.get("storage").toString();
+        String goodstype = param.get("goodstype") == null ? null : param.get("goodstype").toString();
+        Integer count = (Integer) param.get("count");  // 获取 count 参数
 
-    Page<Text> page = new Page<>();
-    page.setCurrent(query.getPageNum());
-    page.setSize(query.getPageSize());
+        // 创建分页对象
+        Page<Text> page = new Page<>();
+        page.setCurrent(query.getPageNum());
+        page.setSize(query.getPageSize());
 
-    QueryWrapper<Text> queryWrapper = new QueryWrapper<>();
-    if (StringUtils.isNotBlank(name) && !"null".equals(name)) {
-        queryWrapper.like("t.name", name); // 明确指定 text 表的 name
-    }
-    if (StringUtils.isNotBlank(content) && !"null".equals(content)) {
-        queryWrapper.like("t.content", content); // 明确指定 text 表的 content
-    }
-    if (StringUtils.isNotBlank(storage) && !"null".equals(storage)) {
-        queryWrapper.eq("s.id", storage); // storage 表的 id
-    }
-    if (StringUtils.isNotBlank(goodstype) && !"null".equals(goodstype)) {
-        queryWrapper.eq("gt.id", goodstype); // goodstype 表的 id
+        QueryWrapper<Text> queryWrapper = new QueryWrapper<>();
+        if (StringUtils.isNotBlank(name)) {
+            queryWrapper.like("t.name", name);  // 确保字段名和数据库一致
+        }
+        if (StringUtils.isNotBlank(content)) {
+            queryWrapper.like("t.content", content);
+        }
+        if (StringUtils.isNotBlank(storage)) {
+            queryWrapper.eq("s.id", storage);
+        }
+        if (StringUtils.isNotBlank(goodstype)) {
+            queryWrapper.eq("gt.id", goodstype);
+        }
+        // 加入 count = 1 的条件
+        queryWrapper.eq("g.count", 1);  // 只返回 count = 1 的记录
+
+        // 执行查询
+        IPage<TextRes> result = textService.pageS(page, queryWrapper);
+        return Result.success(result.getRecords(), result.getTotal());
     }
 
-    IPage<TextRes> result = textService.pageS(page, queryWrapper);
-
-    return Result.success(result.getRecords(), result.getTotal());
-}
     @GetMapping("/list")
     public Result list() {
-        List list= textService.list();
+        List list = textService.list();
         return Result.success(list);
     }
 

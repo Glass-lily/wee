@@ -16,4 +16,5 @@ public interface GoodsService extends IService<Goods> {
     IPage<Goods> pageS(Page<Goods> page, Wrapper<Goods> wrapper);
 
 
+    boolean updateAuditStatus(Integer id, Integer count);
 }
