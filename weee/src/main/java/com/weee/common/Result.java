@@ -33,6 +33,10 @@ public class Result {
         return res;
 
     }
+    // 错误返回方法
+    public static Result error(String msg) {
+        return result(500, msg, 0L, null);  // 500是通用的错误编码
+    }
 
 
     public int getCode() {

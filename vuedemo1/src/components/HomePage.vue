@@ -22,6 +22,7 @@
         <el-form-item>
           <el-button type="primary" @click="loadPost" :loading="loading">查询</el-button>
           <el-button @click="resetParam">重置</el-button>
+          <el-button type="warning" @click="openSensitiveWordsDialog"  v-if="user.roleId != 2">管理敏感词</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -111,6 +112,31 @@
         <el-button @click="previewDialogVisible = false">关闭</el-button>
       </template>
     </el-dialog>
+
+
+
+    <!-- 敏感词管理弹窗 -->
+    <el-dialog v-model="sensitiveWordsDialogVisible" title="管理敏感词" width="500px">
+      <el-table :data="sensitiveWords" border style="width: 100%">
+        <el-table-column prop="word" label="敏感词" width="200"></el-table-column>
+        <el-table-column label="操作" width="120">
+          <template #default="scope">
+            <el-button size="small" type="danger" @click="deleteSensitiveWord(scope.row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-form :model="newSensitiveWord" label-width="80px" style="margin-top: 20px">
+        <el-form-item label="添加新敏感词">
+          <el-input v-model="newSensitiveWord.word" placeholder="请输入敏感词"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="addSensitiveWord">添加</el-button>
+          <el-button @click="sensitiveWordsDialogVisible = false">关闭</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
+
   </div>
 </template>
 
@@ -125,6 +151,11 @@ export default {
   data() {
     return {
       user: JSON.parse(sessionStorage.getItem("CurUser")),
+      sensitiveWords: [], // 敏感词列表（从后端获取）
+      sensitiveWordsDialogVisible: false, // 控制敏感词管理对话框的显示
+      newSensitiveWord: {
+        word: "" // 用于输入新的敏感词
+      },
       goodstypeData: [],
       storageData: [],
       tableData: [],
@@ -167,6 +198,70 @@ export default {
     };
   },
   methods: {
+    // 打开敏感词管理弹窗
+    openSensitiveWordsDialog() {
+      this.sensitiveWordsDialogVisible = true;
+      this.fetchSensitiveWords(); // 获取敏感词列表
+    },
+
+    // 获取敏感词列表
+    async fetchSensitiveWords() {
+      try {
+        const res = await this.$http.get(this.$httpUrl + '/sensitive/list');
+        if (res.data.code === 200) {
+          this.sensitiveWords = res.data.data;
+        } else {
+          ElMessage.error("获取敏感词失败");
+        }
+      } catch (error) {
+        ElMessage.error("请求失败：" + error.message);
+      }
+    },
+
+    // 添加新的敏感词
+    async addSensitiveWord() {
+      if (!this.newSensitiveWord.word) {
+        ElMessage.error("敏感词不能为空！");
+        return;
+      }
+
+      try {
+        const res = await this.$http.post(this.$httpUrl + "/sensitive/add", {
+          word: this.newSensitiveWord.word
+        });
+
+        if (res.data.code === 200) {
+          ElMessage.success("敏感词添加成功！");
+          this.newSensitiveWord.word = ""; // 清空输入框
+          await this.fetchSensitiveWords(); // 重新加载敏感词列表
+        } else {
+          ElMessage.error("添加敏感词失败：" + res.data.msg);
+        }
+      } catch (error) {
+        ElMessage.error("请求失败：" + error.message);
+      }
+    },
+
+    // 删除敏感词
+    async deleteSensitiveWord(sensitiveWord) {
+      try {
+        const res = await this.$http.delete(this.$httpUrl + "/sensitive/delete/" + sensitiveWord.id);
+
+        if (res.data.code === 200) {
+          ElMessage.success("敏感词删除成功！");
+          await this.fetchSensitiveWords(); // 重新加载敏感词列表
+        } else {
+          ElMessage.error("删除敏感词失败：" + res.data.msg);
+        }
+      } catch (error) {
+        ElMessage.error("请求失败：" + error.message);
+      }
+    },
+
+    containsSensitiveWords(text) {
+      return this.sensitiveWords.some(word => text.includes(word));
+    },
+
     see(id) {
       this.$http.get(this.$httpUrl + "/text/detail?id=" + id)
           .then(res => res.data)
@@ -284,6 +379,10 @@ export default {
       }
     },
     save() {
+      if (this.containsSensitiveWords(this.form.name) || this.containsSensitiveWords(this.form.content)) {
+        this.$message.error('包含敏感词，无法提交');
+        return;
+      }
       this.$refs.form.validate(valid => {
         if (valid) {
           if (this.form.id) {
@@ -482,6 +581,7 @@ export default {
     this.loadStorage();
     this.loadGoodstype();
     this.loadPost();
+    this.fetchSensitiveWords(); // 拉取敏感词
   }
 };
 </script>
@@ -528,4 +628,17 @@ export default {
 .wide-select {
   width: 100px;
 }
+
+.sensitive-table {
+  margin-top: 20px;
+}
+
+.el-dialog__body {
+  padding: 20px;
+}
+
+.el-button--primary {
+  margin-left: 10px;
+}
+
 </style>
