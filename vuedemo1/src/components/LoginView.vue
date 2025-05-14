@@ -35,7 +35,7 @@ export default {
                   sessionStorage.setItem("CurUser", JSON.stringify(res.data.user));
                   commit("setMenu", res.data.menu);
                   console.log(res.data.menu);
-                  this.$router.replace('/Index');
+                  this.$router.replace('/Home');
                 } else {
                   this.confirm_disabled = false;
                   ElMessage.error('校验失败，用户名或密码错误！');

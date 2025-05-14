@@ -1,111 +1,531 @@
+<template>
+  <div class="page-container">
+    <!-- 查询区域 -->
+    <el-card class="search-card">
+      <el-form inline>
+        <el-form-item label="名字">
+          <el-input v-model="name" placeholder="请输入名字" clearable @keyup.enter="loadPost"></el-input>
+        </el-form-item>
+        <el-form-item label="内容">
+          <el-input v-model="content" placeholder="请输入内容" clearable @keyup.enter="loadPost"></el-input>
+        </el-form-item>
+        <el-form-item label="知识大类">
+          <el-select v-model="storage" placeholder="请选择" clearable class="wide-select">
+            <el-option v-for="item in storageData" :key="item.id" :label="item.name" :value="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="标签">
+          <el-select v-model="goodstype" placeholder="请选择" clearable class="wide-select">
+            <el-option v-for="item in goodstypeData" :key="item.id" :label="item.name" :value="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="loadPost" :loading="loading">查询</el-button>
+          <el-button @click="resetParam">重置</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <!-- 表格区域 -->
+    <el-card class="table-card">
+      <el-button type="success" @click="add">新增知识</el-button>
+      <el-table
+          :data="tableData"
+          border
+          stripe
+          highlight-current-row
+          style="width: 100%; margin-top: 15px"
+          @current-change="selectCurrentChange"
+      >
+        <el-table-column prop="id" label="ID" width="80"></el-table-column>
+        <el-table-column prop="name" label="名字" show-overflow-tooltip></el-table-column>
+        <el-table-column
+            prop="content"
+            label="内容"
+            width="200"
+            class-name="ellipsis-cell"
+        ></el-table-column>
+        <el-table-column prop="storagename" label="知识大类"></el-table-column>
+        <el-table-column prop="goodstypename" label="标签"></el-table-column>
+        <el-table-column label="操作" width="240">
+          <template #default="scope">
+            <el-button size="small" @click="mod(scope.row)" v-if="user.roleId != 2">编辑</el-button>
+            <el-button size="small" type="danger" @click="del(scope.row.id)" v-if="user.roleId != 2">删除</el-button>
+            <el-button size="small" type="success" @click="see(scope.row.id)">预览</el-button>
+            <el-button size="small" type="primary" @click="exportSingleToExcel(scope.row)">导出Excel</el-button>
+            <el-button size="small" type="warning" @click="exportSingleToPDF(scope.row)">导出PDF</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div class="pagination-container">
+        <el-pagination
+            background
+            layout="prev, pager, next, jumper"
+            :page-size="pageSize"
+            :total="total"
+            @current-change="handleCurrentChange"
+        />
+      </div>
+    </el-card>
+
+    <!-- 知识弹窗表单 -->
+    <el-dialog v-model="centerDialogVisible" title="知识信息" width="500px">
+      <el-form ref="form" :model="form" :rules="rules" label-width="100px">
+        <el-form-item label="名字" prop="name">
+          <el-input v-model="form.name"></el-input>
+        </el-form-item>
+        <el-form-item label="知识大类" prop="storage">
+          <el-select v-model="form.storage" placeholder="请选择">
+            <el-option v-for="item in storageData" :key="item.id" :label="item.name" :value="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="标签" prop="goodstype">
+          <el-select v-model="form.goodstype" placeholder="请选择">
+            <el-option v-for="item in goodstypeData" :key="item.id" :label="item.name" :value="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="内容" prop="content">
+          <el-input v-model="form.content" type="textarea" :rows="5"></el-input>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input v-model="form.remark" type="textarea" :rows="3"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="centerDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="save">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 预览弹窗 -->
+    <el-dialog v-model="previewDialogVisible" title="知识内容预览" width="1200px">
+      <div class="preview-content">
+        <el-descriptions>
+          <el-descriptions-item label="内容">
+            <div class="content-scroll">{{ previewData.content }}</div>
+          </el-descriptions-item>
+        </el-descriptions>
+      </div>
+      <template #footer>
+        <el-button @click="previewDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
 <script>
+import { ElMessage } from "element-plus";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+
 export default {
   name: "HomePage",
   data() {
     return {
-      user: JSON.parse(sessionStorage.getItem('CurUser')) || { name: '用户' }, // Get user from session storage
-      welcomeMessage: '欢迎来到知识库管理系统！', // Default welcome message
-      recentActivity: ['修改资料', '查看文档', '参与讨论'], // Sample recent activities
-      tableData: [ // Sample table data
-        { name: '文档A', description: '描述A', date: '2025-04-15' },
-        { name: '文档B', description: '描述B', date: '2025-04-14' },
-        { name: '文档C', description: '描述C', date: '2025-04-13' },
-      ],
+      user: JSON.parse(sessionStorage.getItem("CurUser")),
+      goodstypeData: [],
+      storageData: [],
+      tableData: [],
+      pageSize: 10,
+      pageNum: 1,
+      total: 0,
+      name: "",
+      content: "",
+      storage: "",
+      goodstype: "",
+      previewDialogVisible: false,
+      previewData: {},
+      centerDialogVisible: false,
+      currentRow: {},
+      loading: false,
+      form: {
+        id: "",
+        name: "",
+        storage: "",
+        content: "",
+        goodstype: "",
+        storagename: "",
+        goodstypename: "",
+        remark: ""
+      },
+      rules: {
+        name: [
+          { required: true, message: "请输入姓名", trigger: "blur" },
+        ],
+        goodstype: [
+          { required: true, message: "请选择标签", trigger: "change" }
+        ],
+        storage: [
+          { required: true, message: "请选择知识大类", trigger: "change" }
+        ],
+        content: [
+          { required: true, message: "请输入内容", trigger: "blur" }
+        ]
+      }
     };
   },
-  created() {
-    if (this.user.name === '用户') {
-      this.welcomeMessage = '请先登录';
-    } else {
-      this.welcomeMessage = `欢迎回来, ${this.user.name}`;
+  methods: {
+    see(id) {
+      this.$http.get(this.$httpUrl + "/text/detail?id=" + id)
+          .then(res => res.data)
+          .then(res => {
+            if (res.code === 200) {
+              this.previewData = res.data;
+              this.previewDialogVisible = true;
+            } else {
+              ElMessage.error("获取详情失败");
+            }
+          });
+    },
+    selectCurrentChange(val) {
+      this.currentRow = val;
+    },
+    handleCurrentChange(val) {
+      this.pageNum = val;
+      this.loadPost();
+    },
+    async loadPost() {
+      this.loading = true;
+      try {
+        const res = await this.$http.post(this.$httpUrl + "/text/listPage", {
+          pageSize: this.pageSize,
+          pageNum: this.pageNum,
+          param: {
+            name: this.name,
+            content: this.content,
+            storage: this.storage || "",
+            goodstype: this.goodstype || ""
+          }
+        }).then(res => res.data);
+        if (res.code === 200) {
+          this.tableData = res.data;
+          this.total = res.total;
+        } else {
+          ElMessage.error("获取数据失败");
+        }
+      } catch (err) {
+        ElMessage.error("请求失败：" + err.message);
+      } finally {
+        this.loading = false;
+      }
+    },
+    resetForm() {
+      this.form = {
+        id: null,
+        name: "",
+        storage: "",
+        content: "",
+        goodstype: "",
+        storagename: "",
+        goodstypename: "",
+        remark: ""
+      };
+      this.$nextTick(() => {
+        if (this.$refs.form) {
+          this.$refs.form.clearValidate();
+        }
+      });
+    },
+    resetParam() {
+      this.name = "";
+      this.content = "";
+      this.storage = "";
+      this.goodstype = "";
+      this.pageNum = 1;
+      this.loadPost();
+    },
+    async mod(row) {
+      if (!this.storageData.length || !this.goodstypeData.length) {
+        await Promise.all([this.loadStorage(), this.loadGoodstype()]);
+      }
+      this.centerDialogVisible = true;
+      this.$nextTick(() => {
+        this.form.id = row.id || "";
+        this.form.name = row.name || "";
+        const storageItem = this.storageData.find(item => item.id == row.storage || item.name === row.storagename);
+        this.form.storage = storageItem ? storageItem.id : "";
+        const goodstypeItem = this.goodstypeData.find(item => item.id == row.goodstype || item.name === row.goodstypename);
+        this.form.goodstype = goodstypeItem ? goodstypeItem.id : "";
+        this.form.content = row.content || "";
+        this.form.remark = row.remark || "";
+        if (!this.form.storage || !this.form.goodstype) {
+          ElMessage.warning("知识大类或标签数据无效，请检查！");
+        }
+      });
+    },
+    async add() {
+      if (!this.storageData.length || !this.goodstypeData.length) {
+        await Promise.all([this.loadStorage(), this.loadGoodstype()]);
+      }
+      this.centerDialogVisible = true;
+      this.$nextTick(() => {
+        this.resetForm();
+      });
+    },
+    async del(id) {
+      try {
+        const [goodsRes, textRes] = await Promise.all([
+          this.$http.get(this.$httpUrl + "/goods/del?id=" + id).then(res => res.data),
+          this.$http.get(this.$httpUrl + "/text/del?id=" + id).then(res => res.data)
+        ]);
+        if (goodsRes.code === 200 && textRes.code === 200) {
+          ElMessage({message: "操作成功！", type: "success"});
+          this.loadPost();
+        } else {
+          ElMessage({message: "操作成功！", type: "success"});
+          //ElMessage.error("操作失败！");
+          this.loadPost();
+        }
+      } catch (error) {
+        console.error(error);
+        ElMessage.error("请求出错！");
+      }
+    },
+    save() {
+      this.$refs.form.validate(valid => {
+        if (valid) {
+          if (this.form.id) {
+            this.doMod();
+          } else {
+            this.doSave();
+          }
+        } else {
+          ElMessage.error("请填写所有必填字段！");
+          return false;
+        }
+      });
+    },
+    doMod() {
+      const updateData = {
+        id: this.form.id,
+        name: this.form.name,
+        storage: this.form.storage,
+        goodstype: this.form.goodstype,
+        content: this.form.content,
+        remark: this.form.remark || ""
+      };
+      if (!updateData.id || !updateData.name || !updateData.storage || !updateData.goodstype || !updateData.content) {
+        ElMessage.error("请填写所有必填字段！");
+        return;
+      }
+      Promise.all([
+        this.$http.post(this.$httpUrl + "/goods/update", {
+          id: updateData.id,
+          name: updateData.name,
+          storage: updateData.storage,
+          goodstype: updateData.goodstype,
+          remark: updateData.remark
+        }).then(res => res.data),
+        this.$http.post(this.$httpUrl + "/text/update", updateData).then(res => res.data)
+      ])
+          .then(([goodsRes, textRes]) => {
+            if (goodsRes.code === 200 && textRes.code === 200) {
+              ElMessage({message: "更新成功！", type: "success"});
+              this.centerDialogVisible = false;
+              this.loadPost();
+            } else {
+              const errorMsg = [];
+              if (goodsRes.code !== 200) {
+                errorMsg.push(`更新 goods 失败: ${goodsRes.msg || '未知错误'}`);
+              }
+              if (textRes.code !== 200) {
+                errorMsg.push(`更新 text 失败: ${textRes.msg || '未知错误'}`);
+              }
+              ElMessage.error(errorMsg.join('；'));
+            }
+          })
+          .catch(err => {
+            ElMessage.error("请求失败：" + err.message);
+          });
+    },
+    doSave() {
+      const saveData = {
+        name: this.form.name,
+        storage: this.form.storage,
+        goodstype: this.form.goodstype,
+        content: this.form.content,
+        remark: this.form.remark || ""
+      };
+      Promise.all([
+        this.$http.post(this.$httpUrl + "/goods/save", saveData).then(res => res.data),
+        this.$http.post(this.$httpUrl + "/text/save", saveData).then(res => res.data)
+      ])
+          .then(([goodsRes, textRes]) => {
+            if (goodsRes.code === 200 && textRes.code === 200) {
+              ElMessage({message: "新增成功！", type: "success"});
+              this.centerDialogVisible = false;
+              this.loadPost();
+            } else {
+              ElMessage.error("新增失败！请检查数据是否重复或服务器异常。");
+            }
+          })
+          .catch(err => {
+            if (err.message.includes("Duplicate entry")) {
+              ElMessage.error("新增失败：记录已存在，请检查输入数据！");
+            } else {
+              ElMessage.error("请求失败：" + err.message);
+            }
+          });
+    },
+    loadStorage() {
+      return this.$http
+          .get(this.$httpUrl + "/storage/list")
+          .then(res => res.data)
+          .then(res => {
+            if (res.code === 200) {
+              this.storageData = res.data;
+            } else {
+              ElMessage.error("获取知识大类失败");
+            }
+          });
+    },
+    loadGoodstype() {
+      return this.$http
+          .get(this.$httpUrl + "/goodstype/list")
+          .then(res => res.data)
+          .then(res => {
+            if (res.code === 200) {
+              this.goodstypeData = res.data;
+            } else {
+              ElMessage.error("获取标签失败");
+            }
+          });
+    },
+    exportSingleToExcel(row) {
+      const data = [
+        ["ID", "名字", "内容", "知识大类", "标签", "创建时间", "更新时间"],
+        [
+          row.id,
+          row.name,
+          row.content,
+          row.storagename,
+          row.goodstypename,
+          row.createdAt,
+          row.updatedAt
+        ]
+      ];
+      const worksheet = XLSX.utils.aoa_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "知识详情");
+      XLSX.writeFile(workbook, `${row.name}_知识详情.xlsx`);
+    },
+    exportSingleToPDF(row) {
+      const tempDiv = document.createElement("div");
+      tempDiv.style.padding = "20px";
+      tempDiv.style.background = "#fff";
+      tempDiv.style.width = "800px";
+      tempDiv.style.fontFamily = "Arial, sans-serif";
+      tempDiv.innerHTML = `
+        <h2 style="font-size: 18px; margin-bottom: 10px;">知识详情</h2>
+        <div style="display: flex; margin-bottom: 10px;">
+          <strong style="width: 100px; flex-shrink: 0;">ID:</strong>
+          <div style="flex: 1; font-size: 14px;">${row.id}</div>
+        </div>
+        <div style="display: flex; margin-bottom: 10px;">
+          <strong style="width: 100px; flex-shrink: 0;">名字:</strong>
+          <div style="flex: 1; font-size: 14px;">${row.name}</div>
+        </div>
+        <div style="display: flex; margin-bottom: 10px;">
+          <strong style="width: 100px; flex-shrink: 0;">内容:</strong>
+          <div style="flex: 1; white-space: pre-wrap; word-break: break-all; font-size: 14px;">
+            ${row.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+          </div>
+        </div>
+        <div style="display: flex; margin-bottom: 10px;">
+          <strong style="width: 100px; flex-shrink: 0;">知识大类:</strong>
+          <div style="flex: 1; font-size: 14px;">${row.storagename}</div>
+        </div>
+        <div style="display: flex; margin-bottom: 10px;">
+          <strong style="width: 100px; flex-shrink: 0;">标签:</strong>
+          <div style="flex: 1; font-size: 14px;">${row.goodstypename}</div>
+        </div>
+        <div style="display: flex; margin-bottom: 10px;">
+          <strong style="width: 100px; flex-shrink: 0;">创建时间:</strong>
+          <div style="flex: 1; font-size: 14px;">${row.createdAt || ''}</div>
+        </div>
+        <div style="display: flex; margin-bottom: 10px;">
+          <strong style="width: 100px; flex-shrink: 0;">更新时间:</strong>
+          <div style="flex: 1; font-size: 14px;">${row.updatedAt || ''}</div>
+        </div>
+      `;
+      document.body.appendChild(tempDiv);
+
+      html2canvas(tempDiv, {scale: 2}).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const imgProps = pdf.getImageProperties(imgData);
+        const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+        let heightLeft = imgHeight;
+        let position = 0;
+
+        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+
+        while (heightLeft > 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
+          heightLeft -= pdfHeight;
+        }
+
+        pdf.save(`${row.name}_知识详情.pdf`);
+        document.body.removeChild(tempDiv);
+      });
     }
   },
+  beforeMount() {
+    this.loadStorage();
+    this.loadGoodstype();
+    this.loadPost();
+  }
 };
 </script>
 
-<template>
-  <div class="home-container">
-    <div class="welcome-message">
-      <h1>{{ welcomeMessage }}</h1>
-    </div>
-
-    <div class="recent-activity">
-      <h3>最近活动：</h3>
-      <ul>
-        <li v-for="(activity, index) in recentActivity" :key="index">{{ activity }}</li>
-      </ul>
-    </div>
-
-    <!-- Full-width Table -->
-    <div class="table-container">
-      <h3>文档列表</h3>
-      <table class="full-width-table">
-        <thead>
-        <tr>
-          <th>名称</th>
-          <th>描述</th>
-          <th>日期</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="(item, index) in tableData" :key="index">
-          <td>{{ item.name }}</td>
-          <td>{{ item.description }}</td>
-          <td>{{ item.date }}</td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</template>
-
 <style scoped>
-.home-container {
+.page-container {
   padding: 20px;
-  font-family: Arial, sans-serif;
-  height: 100vh; /* Full height of the viewport */
-  display: flex;
-  flex-direction: column;
+  background: #f5f7fa;
 }
 
-.welcome-message {
-  font-size: 24px;
-  font-weight: bold;
+.search-card,
+.table-card {
   margin-bottom: 20px;
 }
 
-.recent-activity {
-  font-size: 16px;
+.pagination-container {
+  text-align: right;
+  margin-top: 15px;
 }
 
-.recent-activity ul {
-  list-style-type: none;
-  padding: 0;
+.el-dialog__body {
+  padding: 20px 30px;
 }
 
-.recent-activity li {
-  padding: 5px 0;
+::v-deep .ellipsis-cell .cell {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.table-container {
-  flex: 1; /* Ensures the table container fills the available space */
-  overflow: auto;
+.preview-content {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid #ebeef5;
 }
 
-.full-width-table {
-  width: 100%; /* Ensures the table fills the container width */
-  border-collapse: collapse; /* Makes table borders collapse */
-  table-layout: fixed; /* Ensures consistent column width */
+.content-scroll {
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
-.full-width-table th, .full-width-table td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-.full-width-table th {
-  background-color: #f2f2f2;
-  font-weight: bold;
+.wide-select {
+  width: 100px;
 }
 </style>

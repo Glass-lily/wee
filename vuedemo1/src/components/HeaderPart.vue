@@ -21,7 +21,7 @@ export default {
   methods: {
     toUser() {
       console.log("toUser");
-      this.$router.push("/Home");
+      this.$router.push("/PersonCenter");
     },
     toGoOut() {
       console.log("toGoOut");

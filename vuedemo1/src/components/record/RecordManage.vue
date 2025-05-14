@@ -49,8 +49,8 @@ export default {
               name: this.name,
               storage: this.storage + '',
               goodstype: this.goodstype + '',
-              roleId: this.user.roleId + '',
-              userId: this.user.id + '',
+              roleId:this.user.roleId+ '',
+              userId:this.user.id+ ''
             }
           })
           .then(res => res.data)
@@ -125,7 +125,7 @@ export default {
 
       <el-select
           v-model="storage"
-          placeholder="请选择仓库">
+          placeholder="请选择知识大类">
         <el-option
             v-for="item in storageData"
             :key="item.id"
@@ -144,7 +144,7 @@ export default {
       </el-select>
       <el-select
           v-model="goodstype"
-          placeholder="请选择分类">
+          placeholder="请选择标签">
         <el-option
             v-for="item in goodstypeData"
             :key="item.id"
@@ -173,10 +173,10 @@ export default {
           stripe
           border
       >
-        <el-table-column prop="id" label="ID" width="100" align="center" sortable/>
+       <el-table-column prop="id" label="ID" width="100" align="center" sortable/>
         <el-table-column prop="goodsname" label="名字" width="200" align="center" sortable/>
-        <el-table-column prop="storagename" label="仓库" width="200" align="center"/>
-        <el-table-column prop="goodstypename" label="分类" width="200" align="center"/>
+        <el-table-column prop="storagename" label="知识大类" width="200" align="center"/>
+        <el-table-column prop="goodstypename" label="标签" width="200" align="center"/>
         <el-table-column prop="adminname" label="管理人" width="200" align="center"/>
         <el-table-column prop="username" label="操作人" width="200" align="center"/>
         <el-table-column prop="createtime" label="操作时间" width="200" align="center">

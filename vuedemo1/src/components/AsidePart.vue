@@ -56,35 +56,6 @@ export default {
   background: #304156;
 }
 
-.el-menu {
-  border-right: none;
-  padding: 10px;
-}
-
-.el-menu-item {
-  border-radius: 6px;
-  margin: 4px 0;
-  transition: all 0.3s;
-}
-
-.el-menu-item.is-active {
-  background: #409eff !important;
-  color: #ffffff !important;
-}
-
-.el-menu-item:hover {
-  background: #3b516b;
-}
-
-.el-icon {
-  font-size: 18px;
-  margin-right: 10px;
-}
-
-.el-menu--collapse .el-icon {
-  margin-right: 0;
-}
-
 .el-menu--collapse span {
   display: none;
 }
@@ -94,8 +65,5 @@ export default {
     border-right: none;
   }
 
-  .el-menu {
-    padding: 5px;
-  }
 }
 </style>
