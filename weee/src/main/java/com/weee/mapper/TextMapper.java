@@ -16,7 +16,7 @@ public interface TextMapper extends BaseMapper<Text> {
     IPage<TextRes> pageS(Page<Text> page, @Param(Constants.WRAPPER) Wrapper wrapper);
 
     // 分页查询
-    List<Text> listPage(@Param("name") String name, @Param("storage") String storage, @Param("goodstype") String goodstype);
+    List<Text> listPage(@Param("name") String name, @Param("storage") String storage, @Param("goodstype") String goodstype, @Param("remark") String remark);
 
     // 根据ID查详情
     Text findById(@Param("id") Long id);
@@ -30,4 +30,6 @@ public interface TextMapper extends BaseMapper<Text> {
 
     // 删除
     int delete(@Param("id") Long id);
+
+    
 }

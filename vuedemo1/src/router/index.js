@@ -91,7 +91,12 @@ const routes=[
 
         ]
 
-    }
+    },
+    {
+        path: '/share/:id',  // 动态路由，根据id加载分享内容
+        name: 'SharePage',
+        component:()=>import('@/components/SharePage.vue')
+    },
 ]
 const router = createRouter({
     history: createWebHistory(),

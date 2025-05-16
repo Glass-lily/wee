@@ -101,5 +101,20 @@ public class TextController {
         return textRes != null ? Result.success(textRes) : Result.fail();
     }
 
+    /**
+     * 根据ID获取知识详情，用于分享功能
+     * @param id 知识ID
+     * @return 知识详情
+     */
+    @GetMapping("/share/{id}")
+    public Result share(@PathVariable Long id) {
+        TextRes textRes = textService.getDetailById(id);
+        if (textRes != null) {
+            // 返回用于分享的内容，确保包含所有需要的字段（如 name, content, createdAt 等）
+            return Result.success(textRes);
+        } else {
+            return Result.fail();
+        }
+    }
 }
 

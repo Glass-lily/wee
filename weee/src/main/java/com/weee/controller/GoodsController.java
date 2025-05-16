@@ -14,9 +14,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.UUID;
 
 /**
  * (Goods)表控制层
@@ -112,5 +118,34 @@ public class GoodsController {
             return Result.fail();
         }
     }
+        //上传图片
+        @PostMapping("/uploadImage")
+        public Result uploadImage(@RequestParam("file") MultipartFile file ,@RequestBody(required = false) Goods goods) {
+
+            try {
+                // 获取文件扩展名
+                String originalFilename = file.getOriginalFilename();
+                String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+
+                // 生成唯一的文件名
+                String fileName = UUID.randomUUID().toString() + extension;
+
+                // 设置图片保存路径
+                Path path = Paths.get("upload/images", fileName);
+                Files.createDirectories(path.getParent()); // 如果文件夹不存在，则创建它
+                Files.copy(file.getInputStream(), path); // 保存文件
+
+                goods.setRemark(path.toString());
+                goodsService.updateById(goods);
+
+                // 生成图片的 URL 路径（相对路径）
+                String imageUrl = "/images/" + fileName;
+
+                return Result.success(imageUrl); // 返回图片的访问链接
+            } catch (IOException e) {
+                e.printStackTrace();
+                return Result.fail();
+            }
+        }
 
 }

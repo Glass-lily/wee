@@ -48,6 +48,7 @@
         ></el-table-column>
         <el-table-column prop="storagename" label="知识大类"></el-table-column>
         <el-table-column prop="goodstypename" label="标签"></el-table-column>
+        <el-table-column prop="remark" label="备注"></el-table-column>
         <el-table-column label="操作" width="240">
           <template #default="scope">
             <el-button size="small" @click="mod(scope.row)" v-if="user.roleId != 2">编辑</el-button>
@@ -55,6 +56,7 @@
             <el-button size="small" type="success" @click="see(scope.row.id)">预览</el-button>
             <el-button size="small" type="primary" @click="exportSingleToExcel(scope.row)">导出Excel</el-button>
             <el-button size="small" type="warning" @click="exportSingleToPDF(scope.row)">导出PDF</el-button>
+            <el-button size="small" type="success" @click="shareK(scope.row)">分享</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -76,23 +78,47 @@
         <el-form-item label="名字" prop="name">
           <el-input v-model="form.name"></el-input>
         </el-form-item>
+
         <el-form-item label="知识大类" prop="storage">
           <el-select v-model="form.storage" placeholder="请选择">
             <el-option v-for="item in storageData" :key="item.id" :label="item.name" :value="item.id"></el-option>
           </el-select>
         </el-form-item>
+
         <el-form-item label="标签" prop="goodstype">
           <el-select v-model="form.goodstype" placeholder="请选择">
             <el-option v-for="item in goodstypeData" :key="item.id" :label="item.name" :value="item.id"></el-option>
           </el-select>
         </el-form-item>
+
         <el-form-item label="内容" prop="content">
           <el-input v-model="form.content" type="textarea" :rows="5"></el-input>
         </el-form-item>
+
         <el-form-item label="备注">
-          <el-input v-model="form.remark" type="textarea" :rows="3"></el-input>
+<!--          <el-input v-model="form.remark" type="textarea" :rows="3"></el-input>-->
+
+          <el-upload
+              class="upload-demo"
+              :action="uploadUrl"
+              :file-list="fileList"
+              :on-success="handleSuccess"
+              :on-error="handleError"
+              :multiple="true"
+              :limit="3"
+              :on-exceed="handleExceed"
+              :before-remove="beforeRemove"
+          >
+            <el-button type="primary">上传图片</el-button>
+
+          </el-upload>
+          <div v-if="remark">
+            <p>Uploaded Image URL:</p>
+            <img :src="remark" alt="Uploaded Image" width="200"/>
+          </div>
         </el-form-item>
       </el-form>
+
       <template #footer>
         <el-button @click="centerDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="save">保存</el-button>
@@ -137,6 +163,18 @@
       </el-form>
     </el-dialog>
 
+
+    <!-- 分享链接弹窗 -->
+    <el-dialog v-model="shareDialogVisible" title="分享链接" width="500px">
+      <el-form>
+        <el-form-item label="分享链接">
+          <el-input v-model="shareLink" readonly></el-input>
+        </el-form-item>
+        <template #footer>
+          <el-button @click="shareDialogVisible = false">关闭</el-button>
+        </template>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 
@@ -145,12 +183,19 @@ import { ElMessage } from "element-plus";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+// import {ref} from "vue";
 
+// const imageUrl = ref(""); // 用于存储选择的图片的URL
 export default {
   name: "HomePage",
+
   data() {
     return {
       user: JSON.parse(sessionStorage.getItem("CurUser")),
+      shareDialogVisible: false, // 控制分享弹窗的显示
+      shareLink: '', // 存储生成的分享链接
+      uploadUrl: 'http://localhost:8080/goods/uploadImage', // 后端接口 URL
+      fileList: [],
       sensitiveWords: [], // 敏感词列表（从后端获取）
       sensitiveWordsDialogVisible: false, // 控制敏感词管理对话框的显示
       newSensitiveWord: {
@@ -164,6 +209,7 @@ export default {
       total: 0,
       name: "",
       content: "",
+      remark:'', // 保存上传后的图片 URL
       storage: "",
       goodstype: "",
       previewDialogVisible: false,
@@ -198,6 +244,32 @@ export default {
     };
   },
   methods: {
+    // 分享功能
+    shareK(row) {
+      const shareUrl = `${window.location.origin}/share/${row.id}`;  // 生成分享链接
+      console.log("分享链接：", shareUrl);  // 可以在控制台查看生成的分享链接
+      // 你可以在这里弹出分享链接的弹窗或直接显示
+      this.$message.success(`分享链接: ${shareUrl}`);
+    },
+    // 上传成功时的处理方法
+    handleSuccess(response) {
+      if (response && response.data) {
+        this.remark = response.data; // 接收返回的图片 URL
+        this.$message.success('Image uploaded successfully!');
+      }
+    },
+    // 上传失败时的处理方法
+    handleError() {
+      this.$message.error('Image upload failed!');
+    },
+    // 超过限制时的处理方法
+    handleExceed(files) {
+      this.$message.warning(`You can upload a maximum of 3 files, but you selected ${files.length} files.`);
+    },
+    // 删除文件前的确认
+    beforeRemove(file) {
+      return this.$confirm(`Are you sure you want to remove ${file.name}?`);
+    },
     // 打开敏感词管理弹窗
     openSensitiveWordsDialog() {
       this.sensitiveWordsDialogVisible = true;

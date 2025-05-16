@@ -15,13 +15,16 @@
         <result property="storagename" column="storagename" jdbcType="VARCHAR"/>
         <result property="goodstypename" column="goodstypename" jdbcType="VARCHAR"/>
         <result property="count" column="count" jdbcType="INTEGER"/>
+        <result property="remark" column="remark" jdbcType="VARCHAR"/>
+
     </resultMap>
 
     <!-- 分页查询 -->
     <select id="pageS" resultMap="TextResMap">
         SELECT
         t.*,
-        g.`count` AS count,               <!-- 使用反引号避免与 MySQL 保留字冲突 -->
+        g.`count` AS count,   <!-- 使用反引号避免与 MySQL 保留字冲突 -->
+        g.remark AS remark,
         s.name AS storagename,
         gt.name AS goodstypename
         FROM
