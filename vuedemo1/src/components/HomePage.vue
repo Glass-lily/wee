@@ -49,6 +49,7 @@
         <el-table-column prop="storagename" label="知识大类"></el-table-column>
         <el-table-column prop="goodstypename" label="标签"></el-table-column>
         <el-table-column prop="remark" label="备注"></el-table-column>
+
         <el-table-column label="操作" width="240">
           <template #default="scope">
             <el-button size="small" @click="mod(scope.row)" v-if="user.roleId != 2">编辑</el-button>
@@ -95,28 +96,29 @@
           <el-input v-model="form.content" type="textarea" :rows="5"></el-input>
         </el-form-item>
 
-        <el-form-item label="备注">
-<!--          <el-input v-model="form.remark" type="textarea" :rows="3"></el-input>-->
 
-          <el-upload
-              class="upload-demo"
-              :action="uploadUrl"
-              :file-list="fileList"
-              :on-success="handleSuccess"
-              :on-error="handleError"
-              :multiple="true"
-              :limit="3"
-              :on-exceed="handleExceed"
-              :before-remove="beforeRemove"
-          >
-            <el-button type="primary">上传图片</el-button>
+          <el-form-item label="图片" prop="remark">
+            <el-upload
+                v-model="form.remark"
+                class="upload-demo"
+                :action="uploadUrl"
+                :data="{ id: form.id }"
+                list-type="picture-card"
+                :file-list="fileList"
+                :before-upload="beforeUpload"
+                :on-success="handleUploadSuccess"
+                :on-error="handleUploadError"
+                :on-preview="handlePreview"
+            >
+              <i class="el-icon-plus"></i>
+            </el-upload>
+          </el-form-item>
 
-          </el-upload>
-          <div v-if="remark">
-            <p>Uploaded Image URL:</p>
-            <img :src="remark" alt="Uploaded Image" width="200"/>
-          </div>
-        </el-form-item>
+          <!-- 预览弹窗 -->
+          <el-dialog v-model:visible="previewVisible" width="40%">
+            <img width="100%" :src="previewImage" alt="图片预览" />
+          </el-dialog>
+
       </el-form>
 
       <template #footer>
@@ -127,6 +129,24 @@
 
     <!-- 预览弹窗 -->
     <el-dialog v-model="previewDialogVisible" title="知识内容预览" width="1200px">
+      <div class="previewImage">
+        <el-descriptions>
+          <el-descriptions-item label="图片"  v-model:visible="previewVisible" width="40%"  >
+            <el-form-item label="图片" prop="remark">
+              <el-upload
+                  v-model="form.remark"
+                  class="upload-demo"
+                  :action="uploadUrl"
+                  :data="{ id: form.id }"
+                  list-type="picture-card"
+                  :file-list="fileList"
+              >
+                <i class="el-icon-plus"></i>
+              </el-upload>
+            </el-form-item>
+          </el-descriptions-item>
+        </el-descriptions>
+      </div>
       <div class="preview-content">
         <el-descriptions>
           <el-descriptions-item label="内容">
@@ -195,7 +215,9 @@ export default {
       shareDialogVisible: false, // 控制分享弹窗的显示
       shareLink: '', // 存储生成的分享链接
       uploadUrl: 'http://localhost:8080/goods/uploadImage', // 后端接口 URL
-      fileList: [],
+      fileList: [],          // 上传组件的列表
+      previewImage: '',    // 预览时的图片 URL
+      previewVisible: false,
       sensitiveWords: [], // 敏感词列表（从后端获取）
       sensitiveWordsDialogVisible: false, // 控制敏感词管理对话框的显示
       newSensitiveWord: {
@@ -225,7 +247,7 @@ export default {
         goodstype: "",
         storagename: "",
         goodstypename: "",
-        remark: ""
+        remark: ''
       },
       rules: {
         name: [
@@ -243,6 +265,13 @@ export default {
       }
     };
   },
+  computed: {
+    // 构造后端 uploadImage 接口地址
+    // eslint-disable-next-line vue/no-dupe-keys
+    uploadUrl() {
+      return `${this.$httpUrl}/goods/uploadImage`;
+    }
+  },
   methods: {
     // 分享功能
     shareK(row) {
@@ -251,24 +280,36 @@ export default {
       // 你可以在这里弹出分享链接的弹窗或直接显示
       this.$message.success(`分享链接: ${shareUrl}`);
     },
-    // 上传成功时的处理方法
-    handleSuccess(response) {
-      if (response && response.data) {
-        this.remark = response.data; // 接收返回的图片 URL
-        this.$message.success('Image uploaded successfully!');
+    // 限制格式与大小
+    beforeUpload(file) {
+      const isImg = file.type.startsWith('image/');
+      const okSize = file.size / 1024 / 1024 < 2;
+      if (!isImg) this.$message.error('只能上传图片');
+      if (!okSize) this.$message.error('请上传小于 2MB 的图片');
+      return isImg && okSize;
+    },
+    // 上传成功时，将后端返回的 URL 写入 form.remark，并更新 file.url
+    handleUploadSuccess(res, file) {
+      if (res.code === 200) {
+        // 后端返回的 res.data = "/images/xxx.jpg"
+        const url = res.data;
+        // 存到表单里，后续 save 会把它一起提交
+        this.form.remark = url;
+        // 拼成完整 URL，给 el-upload 预览用
+        // 假设 this.$httpUrl = 'http://127.0.0.1:8080'
+        file.url = `${this.$httpUrl}${url}`;
+        this.$message.success('上传成功');
+      } else {
+        this.$message.error('上传失败');
       }
     },
-    // 上传失败时的处理方法
-    handleError() {
-      this.$message.error('Image upload failed!');
+    handleUploadError() {
+      this.$message.error('上传出错');
     },
-    // 超过限制时的处理方法
-    handleExceed(files) {
-      this.$message.warning(`You can upload a maximum of 3 files, but you selected ${files.length} files.`);
-    },
-    // 删除文件前的确认
-    beforeRemove(file) {
-      return this.$confirm(`Are you sure you want to remove ${file.name}?`);
+    // 点击预览时
+    handlePreview(file) {
+      this.previewImage = file.url || this.form.remark;
+      this.previewVisible = true;
     },
     // 打开敏感词管理弹窗
     openSensitiveWordsDialog() {
@@ -363,7 +404,8 @@ export default {
             name: this.name,
             content: this.content,
             storage: this.storage || "",
-            goodstype: this.goodstype || ""
+            goodstype: this.goodstype || "",
+            remark:this.remark
           }
         }).then(res => res.data);
         if (res.code === 200) {
@@ -404,23 +446,39 @@ export default {
       this.loadPost();
     },
     async mod(row) {
+      // 分类/标签加载逻辑
       if (!this.storageData.length || !this.goodstypeData.length) {
         await Promise.all([this.loadStorage(), this.loadGoodstype()]);
       }
+
+      // 打开弹窗
       this.centerDialogVisible = true;
       this.$nextTick(() => {
         this.form.id = row.id || "";
         this.form.name = row.name || "";
+        // 找到并赋 storage
         const storageItem = this.storageData.find(item => item.id == row.storage || item.name === row.storagename);
         this.form.storage = storageItem ? storageItem.id : "";
+        // 找到并赋 goodstype
         const goodstypeItem = this.goodstypeData.find(item => item.id == row.goodstype || item.name === row.goodstypename);
         this.form.goodstype = goodstypeItem ? goodstypeItem.id : "";
         this.form.content = row.content || "";
         this.form.remark = row.remark || "";
+
+        // 清空并初始化 fileList
+        this.fileList = [];
+        if (this.form.remark) {
+          this.fileList.push({
+            name: this.form.remark.split('/').pop(),
+            url: `${this.$httpUrl}${this.form.remark}`
+          });
+        }
+        // 校验提示
         if (!this.form.storage || !this.form.goodstype) {
           ElMessage.warning("知识大类或标签数据无效，请检查！");
         }
       });
+
     },
     async add() {
       if (!this.storageData.length || !this.goodstypeData.length) {
@@ -450,22 +508,30 @@ export default {
         ElMessage.error("请求出错！");
       }
     },
+    // save() {
+    //   if (this.containsSensitiveWords(this.form.name) || this.containsSensitiveWords(this.form.content)) {
+    //     this.$message.error('包含敏感词，无法提交');
+    //     return;
+    //   }
+    //   this.$refs.form.validate(valid => {
+    //     if (valid) {
+    //       if (this.form.id) {
+    //         this.doMod();
+    //       } else {
+    //         this.doSave();
+    //       }
+    //     } else {
+    //       ElMessage.error("请填写所有必填字段！");
+    //       return false;
+    //     }
+    //   });
+    // },
+    // 覆盖 save 方法，确保 remark 带上图片地址
     save() {
-      if (this.containsSensitiveWords(this.form.name) || this.containsSensitiveWords(this.form.content)) {
-        this.$message.error('包含敏感词，无法提交');
-        return;
-      }
       this.$refs.form.validate(valid => {
-        if (valid) {
-          if (this.form.id) {
-            this.doMod();
-          } else {
-            this.doSave();
-          }
-        } else {
-          ElMessage.error("请填写所有必填字段！");
-          return false;
-        }
+        if (!valid) return;
+        // doSave 内会把 form.remark 一并提交到 /goods/save
+        this.doSave();
       });
     },
     doMod() {

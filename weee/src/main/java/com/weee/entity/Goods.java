@@ -1,5 +1,7 @@
 package com.weee.entity;
 
+import lombok.Data;
+
 import java.io.Serializable;
 
 /**
@@ -8,6 +10,7 @@ import java.io.Serializable;
  * @author hk
  * @since 2025-04-14 12:20:47
  */
+@Data
 public class Goods implements Serializable {
 
 /**
@@ -15,15 +18,15 @@ public class Goods implements Serializable {
      */
     private Integer id;
 /**
-     * 货名
+     * 名字
      */
     private String name;
 /**
-     * 仓库
+     * 知识大类
      */
     private Integer storage;
 /**
-     * 分类
+     * 标签关键词
      */
     private Integer goodstype;
 /**
@@ -31,58 +34,10 @@ public class Goods implements Serializable {
      */
     private Integer count;
 /**
-     * 备注
+     * 备注:上传图片用的
      */
     private String remark;
 
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getStorage() {
-        return storage;
-    }
-
-    public void setStorage(Integer storage) {
-        this.storage = storage;
-    }
-
-    public Integer getGoodstype() {
-        return goodstype;
-    }
-
-    public void setGoodstype(Integer goodstype) {
-        this.goodstype = goodstype;
-    }
-
-    public Integer getCount() {
-        return count;
-    }
-
-    public void setCount(Integer count) {
-        this.count = count;
-    }
-
-    public String getRemark() {
-        return remark;
-    }
-
-    public void setRemark(String remark) {
-        this.remark = remark;
-    }
 
 }
 

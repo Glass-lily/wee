@@ -84,12 +84,14 @@ public class GoodsController {
         String name = param.get("name").toString();
         String storage = param.get("storage").toString();
         String goodstype = param.get("goodstype").toString();
+     //   String remark =param.get("remark").toString();
 
         Page<Goods> page = new Page<>();
         page.setCurrent(query.getPageNum());
         page.setSize(query.getPageSize());
 
         LambdaQueryWrapper<Goods> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+
         if (StringUtils.isNotBlank(name) && !"null".equals(name)) {
             lambdaQueryWrapper.like(Goods::getName, name);
         }
@@ -120,32 +122,34 @@ public class GoodsController {
     }
         //上传图片
         @PostMapping("/uploadImage")
-        public Result uploadImage(@RequestParam("file") MultipartFile file ,@RequestBody(required = false) Goods goods) {
-
+        public Result uploadImage(
+                @RequestParam("file") MultipartFile file,
+                @RequestParam("id") Integer id) {
             try {
-                // 获取文件扩展名
-                String originalFilename = file.getOriginalFilename();
-                String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                // 1. 构造文件名并保存到磁盘
+                String original = file.getOriginalFilename();
+                String ext = original.substring(original.lastIndexOf("."));
+                String fileName = UUID.randomUUID().toString() + ext;
+                Path uploadPath = Paths.get("upload/images", fileName);
+                Files.createDirectories(uploadPath.getParent());
+                Files.copy(file.getInputStream(), uploadPath);
 
-                // 生成唯一的文件名
-                String fileName = UUID.randomUUID().toString() + extension;
-
-                // 设置图片保存路径
-                Path path = Paths.get("upload/images", fileName);
-                Files.createDirectories(path.getParent()); // 如果文件夹不存在，则创建它
-                Files.copy(file.getInputStream(), path); // 保存文件
-
-                goods.setRemark(path.toString());
-                goodsService.updateById(goods);
-
-                // 生成图片的 URL 路径（相对路径）
+                // 2. 构造对外访问的 URL
                 String imageUrl = "/images/" + fileName;
 
-                return Result.success(imageUrl); // 返回图片的访问链接
+                // 3. 只更新该商品的 remark 字段
+                Goods g = new Goods();
+                g.setId(id);
+                g.setRemark(imageUrl);
+                goodsService.updateById(g);
+
+                // 4. 返回给前端预览用的 URL
+                return Result.success(imageUrl);
             } catch (IOException e) {
                 e.printStackTrace();
                 return Result.fail();
             }
         }
+
 
 }

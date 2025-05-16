@@ -62,6 +62,7 @@ public class TextController {
         String storage = param.get("storage") == null ? null : param.get("storage").toString();
         String goodstype = param.get("goodstype") == null ? null : param.get("goodstype").toString();
         Integer count = (Integer) param.get("count");  // 获取 count 参数
+        String remark = param.get("remark")==null ? null : param.get("remark").toString();
 
         // 创建分页对象
         Page<Text> page = new Page<>();
